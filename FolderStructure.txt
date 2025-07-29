@@ -1,0 +1,21 @@
+SafePathObserver/
+│
+├── app/
+│   ├── Controllers/       # PHP backend logic, per role and feature
+│   ├── Models/            # PHP classes for data (students, courses, etc.)
+│   ├── Views/             # PHP templates with HTML, calls to shared components
+│   │   ├── components/    # Side panel, nav bar, search bar, etc.
+│   │   ├── student/
+│   │   ├── trainer/
+│   │   ├── admin/
+│   │   └── auth/
+│
+├── public/                # Static frontend assets accessible to browsers
+│   ├── css/               # Your CSS & Bootstrap files
+│   ├── js/                # JavaScript files
+│   ├── images/            # Images
+│   └── index.php          # Entry point routing to controllers
+│
+├── config/                # Configuration files (db, app settings)
+├── vendor/                # Optional 3rd party libs if needed
+└── README.md
