@@ -6,7 +6,7 @@ SafePathObserver/
 │   ├── Views/             # PHP templates with HTML, calls to shared components
 │   │   ├── components/    # Side panel, nav bar, search bar, etc.
 │   │   ├── student/
-│   │   ├── trainer/
+│   │   ├── instructor/
 │   │   ├── admin/
 │   │   └── auth/
 │

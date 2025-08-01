@@ -4,7 +4,7 @@ class StudentController {
         // Sample data for student dashboard
         $dashboardData = [
             'currentCourse' => 'Basic Driving',
-            'nextLesson' => ['date' => '2023-07-15', 'time' => '10:00 AM', 'trainer' => 'Mr. Smith'],
+            'nextLesson' => ['date' => '2023-07-15', 'time' => '10:00 AM', 'instructor' => 'Mr. Smith'],
             'progress' => 35,
             'hoursCompleted' => 8
         ];

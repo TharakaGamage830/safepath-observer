@@ -6,9 +6,8 @@
         </button>
         
         <!-- Brand -->
-        <!-- <a class="navbar-brand" href="index.php"> -->
-        <img src="../../../public/images/safe-path-observer-logo.png" alt="SafePath" width="200" height="200">
-            <i class="bi bi-shield-check text-primary me-2"></i>
+        <a class="navbar-brand d-flex align-items-center" href="../../../public/index.php">
+            <img src="../../../public/images/safe-path-observer-logo.png" alt="SafePath" width="40" height="40" class="me-2">
             <span class="text-primary">SafePath</span>
             <span class="text-warning">Observer</span>
         </a>
@@ -22,6 +21,7 @@
                 <input type="text" class="form-control border-start-0" placeholder="Search" style="background-color: #f8f9fa;">
             </div>
         </div>
+            <?php $user = [ 'name' => 'John Doe','role' => 'admin',];?>
         
         <!-- User Menu -->
         <div class="navbar-nav">
@@ -40,7 +40,7 @@
                     <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>
                     <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Settings</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-danger" href="logout.php"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                    <li><a class="dropdown-item text-danger" href="../../../login/index.php"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
                 </ul>
             </div>
         </div>

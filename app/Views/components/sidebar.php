@@ -4,46 +4,56 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
 
 // Define menu items based on user role
 $menu_items = [];
-
+$user = [ 'name' => 'John Doe','role' => 'admin',];
 if ($user['role'] === 'admin') {
     $menu_items = [
         [
             'id' => 'dashboard',
             'label' => 'Dashboard',
             'icon' => 'bi-speedometer2',
-            'url' => 'admin_dashboard.php',
-            'active' => ($current_page === 'admin_dashboard' || $current_page === 'index')
+            'url' => 'admin-dashboard.php',
+            'active' => ($current_page === 'admin-dashboard')
         ],
         [
             'id' => 'students',
             'label' => 'Students',
             'icon' => 'bi-people',
-            'url' => 'admin_student_management.php',
-            'active' => ($current_page === 'admin_student_management')
+            'url' => 'students-details-form.php',
+            'active' => ($current_page === 'students-details-form')
         ],
         [
-            'id' => 'instructors',
+            'id' => 'instructor',
             'label' => 'Instructors',
             'icon' => 'bi-person-badge',
-            'url' => 'admin_instructor_management.php',
-            'active' => ($current_page === 'admin_instructor_management')
+            'url' => 'instructor-detail-form.php',
+            'active' => ($current_page === 'instructor-detail-form')
         ],
         [
             'id' => 'courses',
             'label' => 'Courses',
             'icon' => 'bi-book',
-            'url' => 'admin_courses_management.php',
-            'active' => ($current_page === 'admin_courses_management')
+            'url' => 'course-detail-form.php',
+            'active' => ($current_page === 'course-detail-form')
         ]
     ];
-} elseif ($user['role'] === 'instructor') {
+} elseif ($user['role'] === 'admin') {
     $menu_items = [
         [
             'id' => 'dashboard',
             'label' => 'Dashboard',
             'icon' => 'bi-speedometer2',
-            'url' => 'instructor_dashboard.php',
-            'active' => ($current_page === 'instructor_dashboard' || $current_page === 'index')
+            'url' => 'admin-dashboard.php',
+            'active' => ($current_page === 'admin-dashboard')
+        ]
+    ];
+}elseif ($user['role'] === 'instructor') {
+    $menu_items = [
+        [
+            'id' => 'dashboard',
+            'label' => 'Dashboard',
+            'icon' => 'bi-speedometer2',
+            'url' => 'instructor-dashboard.php',
+            'active' => ($current_page === 'instructor-dashboard')
         ]
     ];
 } elseif ($user['role'] === 'student') {
@@ -52,8 +62,8 @@ if ($user['role'] === 'admin') {
             'id' => 'dashboard',
             'label' => 'Dashboard',
             'icon' => 'bi-speedometer2',
-            'url' => 'student_dashboard.php',
-            'active' => ($current_page === 'student_dashboard' || $current_page === 'index')
+            'url' => 'student-dashboard.php',
+            'active' => ($current_page === 'student-dashboard')
         ]
     ];
 }
@@ -79,7 +89,7 @@ if ($user['role'] === 'admin') {
             <i class="bi bi-gear"></i>
             Setting
         </a>
-        <a href="logout.php" class="sidebar-item text-danger">
+        <a href="../../../login/index.php" class="sidebar-item text-danger">
             <i class="bi bi-box-arrow-left"></i>
             Logout
         </a>

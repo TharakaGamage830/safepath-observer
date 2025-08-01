@@ -4,7 +4,7 @@ class AdminController {
         // Sample data for dashboard
         $dashboardData = [
             'studentCount' => 124,
-            'trainerCount' => 8,
+            'instructorCount' => 8,
             'courseCount' => 15,
             'recentBookings' => [
                 ['id' => 1, 'student' => 'John Doe', 'course' => 'Basic Driving', 'date' => '2023-07-15', 'time' => '10:00 AM', 'status' => 'Confirmed'],

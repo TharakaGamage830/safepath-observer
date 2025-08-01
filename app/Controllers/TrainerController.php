@@ -1,7 +1,7 @@
 <?php
-class TrainerController {
+class InstructorController {
     public function dashboard() {
-        // Sample data for trainer dashboard
+        // Sample data for instructor dashboard
         $dashboardData = [
             'upcomingLessons' => [
                 ['id' => 1, 'student' => 'Michael Brown', 'course' => 'Basic Driving', 'date' => 'Today', 'time' => '10:00 AM'],
@@ -11,6 +11,6 @@ class TrainerController {
             'completedLessons' => 56
         ];
         
-        require_once __DIR__ . '/../Views/trainer/dashboard.php';
+        require_once __DIR__ . '/../Views/instructor/dashboard.php';
     }
 }

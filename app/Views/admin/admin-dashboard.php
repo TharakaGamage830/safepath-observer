@@ -1,3 +1,5 @@
+<?php ob_start(); ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -520,3 +522,8 @@
     </script>
 </body>
 </html>
+
+<?php
+$content = ob_get_clean(); // Get all buffered HTML
+include '../components/layout.php'; // Insert layout and pass $content to it
+?>
