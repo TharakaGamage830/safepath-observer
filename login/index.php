@@ -18,6 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         $success_message = "Login successful! Welcome back.";
+        header('Location: ../public/index.php');
+        exit();
     } else {
         $error_message = "Invalid email or password. Please try again.";
     }
