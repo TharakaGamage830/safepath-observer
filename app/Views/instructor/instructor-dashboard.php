@@ -4,12 +4,15 @@ require_once '../../../config/constants.php';
 
 // Check if instructor is logged in
 if (!isset($_SESSION['instructor_id'])) {
-    header('Location: ../login/index.php');
+    header('Location: ../../../login/index.php');
     exit();
 }
 
 $instructor_id = $_SESSION['instructor_id'];
 $instructor_name = $_SESSION['instructor_name'] ?? 'Instructor';
+
+
+
 
 // Database connection
 try {
@@ -281,8 +284,8 @@ ob_start();
                             <!-- Profile Section -->
                             <div class="text-center mb-3">
                                 <img src="<?php echo !empty($student['profile_picture']) ? 
-                                    '../public/images/profiles/' . htmlspecialchars($student['profile_picture']) : 
-                                    '../public/images/default-avatar.png'; ?>" 
+                                    '../../../public/images/profiles/' . htmlspecialchars($student['profile_picture']) : 
+                                    '../../../public/images/default-avatar.png'; ?>" 
                                     alt="Student" class="profile-img rounded-circle mb-2">
                                 <h5 class="mb-1"><?php echo htmlspecialchars($student['student_name']); ?></h5>
                                 <p class="text-muted small mb-2"><?php echo htmlspecialchars($student['email']); ?></p>
@@ -330,8 +333,8 @@ ob_start();
                     <div class="col-md-6 col-lg-4 mb-3">
                         <div class="attendance-card">
                             <img src="<?php echo !empty($student['profile_picture']) ? 
-                                '../public/images/profiles/' . htmlspecialchars($student['profile_picture']) : 
-                                '../public/images/default-avatar.png'; ?>" 
+                                '../../../public/images/profiles/' . htmlspecialchars($student['profile_picture']) : 
+                                '../../../public/images/default-avatar.png'; ?>" 
                                 alt="Student" class="rounded-circle mb-2" style="width: 50px; height: 50px; object-fit: cover;">
                             <h6 class="mb-3"><?php echo htmlspecialchars($student['student_name']); ?></h6>
                             

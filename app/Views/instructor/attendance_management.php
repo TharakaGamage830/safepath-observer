@@ -4,7 +4,7 @@ require_once '../../../config/constants.php';
 
 // Check if instructor is logged in
 if (!isset($_SESSION['instructor_id'])) {
-    header('Location: ../login/index.php');
+    header('Location: ../../../login/index.php');
     exit();
 }
 
