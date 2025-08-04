@@ -14,49 +14,52 @@ $user = $_SESSION['user'];
 
 <style>
   .navbar-custom {
-    height: 60px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1040;
-    background-color: #fff !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-  
-  .user-avatar {
-    width: 32px;
-    height: 32px;
-    background-color: #6c757d;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 8px;
-  }
-  
-  .dropdown-toggle::after {
-    margin-left: 8px;
-  }
-  
-  .dropdown-menu {
-    min-width: 200px;
-    border: 1px solid #dee2e6;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  .dropdown-item {
-    padding: 8px 16px;
-  }
-  
-  .dropdown-item:hover {
-    background-color: #f8f9fa;
-  }
-  
-  .dropdown-item.text-danger:hover {
-    background-color: #f8d7da;
-    color: #842029;
-  }
+  height: 60px;
+  position: fixed !important; /* Force fixed positioning */
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%; /* Explicitly set width */
+  z-index: 1040;
+  background-color: #fff !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin: 0; /* Reset any margins */
+  padding: 0; /* Reset any padding that might interfere */
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  background-color: #6c757d;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+}
+
+.dropdown-toggle::after {
+  margin-left: 8px;
+}
+
+.dropdown-menu {
+  min-width: 200px;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-item {
+  padding: 8px 16px;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+.dropdown-item.text-danger:hover {
+  background-color: #f8d7da;
+  color: #842029;
+}
 </style>
 
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom navbar-custom">

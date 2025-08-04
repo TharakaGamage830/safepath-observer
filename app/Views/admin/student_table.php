@@ -498,7 +498,7 @@ ob_start();
                                     <td data-label="Name"><?= htmlspecialchars($student['name']) ?></td>
                                     <td data-label="Course"><?= htmlspecialchars($student['course_name']) ?></td>
 
-                                    <td data-label="Phone"><?= htmlspecialchars($student['phone_number']) ?></td>
+                                    <td data-label="Phone"><?= htmlspecialchars($student['phone']) ?></td>
 
                                     <td data-label="Phone"><?= htmlspecialchars($student['phone']) ?></td>
 
@@ -510,10 +510,10 @@ ob_start();
                                     <td data-label="Actions">
                                         <div class="d-flex action-container">
 
-                                            <button class="action-btn view-btn" onclick="viewStudent(<?= $student['id'] ?>)">
+                                            <button class="action-btn view-btn" onclick="viewStudent(<?= $student['student_id'] ?>)">
                                                 <i class="fas fa-eye"></i>
                                             </button>
-                                            <button class="action-btn edit-btn" onclick="editStudent(<?= $student['id'] ?>)">
+                                            <button class="action-btn edit-btn" onclick="editStudent(<?= $student['student_id'] ?>)">
 
                                             <button class="action-btn view-btn" onclick="viewStudent('<?= $student['student_id'] ?>')">
                                                 <i class="fas fa-eye"></i>
@@ -525,7 +525,7 @@ ob_start();
                                             <form method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this student?')">
                                                 <input type="hidden" name="action" value="delete_student">
 
-                                                <input type="hidden" name="id" value="<?= $student['id'] ?>">
+                                                <input type="hidden" name="id" value="<?= $student['student_id'] ?>">
 
                                                 <input type="hidden" name="id" value="<?= $student['student_id'] ?>">
 
