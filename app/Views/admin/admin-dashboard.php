@@ -186,29 +186,86 @@ ob_start();
             </h1>
             <p class="dashboard-subtitle">Driving School Management System Statistics</p>
         </div>
-
-        <!-- Statistics Cards -->
-        <div class="row mb-4">
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="stat-card">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-label">Total Students</div>
-                            <h2 class="stat-number"><?= $totalStudents ?></h2>
-                            <small class="text-success">
-                                <i class="fas fa-arrow-up me-1"></i>Last 7 days: <?= $recentStudents->num_rows ?> new
-                            </small>
-                        </div>
-                        <div class="stat-icon">
-                            <i class="fas fa-user-graduate"></i>
-                        </div>
+        
+        <div>
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <!-- Card 1: Total Students -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-label">Total Students</div>
+                        <h2 class="stat-number"><?= $totalStudents ?></h2>
+                        <small class="text-success">
+                            <i class="fas fa-arrow-up me-1"></i>Last 7 days: <?= $recentStudents->num_rows ?> new
+                        </small>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-user-graduate"></i>
                     </div>
                 </div>
             </div>
-            
-
-            <!-- Add more stat cards as needed -->
         </div>
+
+        <!-- Card 2: Active Students -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-label">Active Students</div>
+                        <?php
+                        $activeStudentsQuery = "SELECT COUNT(*) as total FROM students WHERE enrollment_status = 'active'";
+                        $activeStudents = $conn->query($activeStudentsQuery)->fetch_assoc()['total'];
+                        ?>
+                        <h2 class="stat-number"><?= $activeStudents ?></h2>
+                    </div>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Completed Courses -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-label">Completed Courses</div>
+                        <?php
+                        $completedQuery = "SELECT COUNT(*) as total FROM students WHERE enrollment_status = 'completed'";
+                        $completed = $conn->query($completedQuery)->fetch_assoc()['total'];
+                        ?>
+                        <h2 class="stat-number"><?= $completed ?></h2>
+                    </div>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 4: Available Courses -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-label">Available Courses</div>
+                        <?php
+                        $coursesQuery = "SELECT COUNT(*) as total FROM courses";
+                        $coursesCount = $conn->query($coursesQuery)->fetch_assoc()['total'];
+                        ?>
+                        <h2 class="stat-number"><?= $coursesCount ?></h2>
+                    </div>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <i class="fas fa-book"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
         <!-- Recent Student Registrations -->
         <div class="chart-container">
@@ -251,61 +308,6 @@ ob_start();
                         <?php endif; ?>
                     </tbody>
                 </table>
-            </div>
-        </div>
-
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="stat-card">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-label">Active Students</div>
-                            <?php
-                            $activeStudentsQuery = "SELECT COUNT(*) as total FROM students WHERE enrollment_status = 'active'";
-                            $activeStudents = $conn->query($activeStudentsQuery)->fetch_assoc()['total'];
-                            ?>
-                            <h2 class="stat-number"><?= $activeStudents ?></h2>
-                        </div>
-                        <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="stat-card">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-label">Completed Courses</div>
-                            <?php
-                            $completedQuery = "SELECT COUNT(*) as total FROM students WHERE enrollment_status = 'completed'";
-                            $completed = $conn->query($completedQuery)->fetch_assoc()['total'];
-                            ?>
-                            <h2 class="stat-number"><?= $completed ?></h2>
-                        </div>
-                        <div class="stat-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
-                            <i class="fas fa-trophy"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="stat-card">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-label">Available Courses</div>
-                            <?php
-                            $coursesQuery = "SELECT COUNT(*) as total FROM courses";
-                            $coursesCount = $conn->query($coursesQuery)->fetch_assoc()['total'];
-                            ?>
-                            <h2 class="stat-number"><?= $coursesCount ?></h2>
-                        </div>
-                        <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
-                            <i class="fas fa-book"></i>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
