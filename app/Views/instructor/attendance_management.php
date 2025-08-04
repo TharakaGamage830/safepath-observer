@@ -3,21 +3,19 @@ session_start();
 require_once '../../../config/constants.php';
 
 // Check if instructor is logged in
-if (!isset($_SESSION['instructor_id'])) {
-    header('Location: ../../../login/index.php');
-    exit();
-}
+// if (!isset($_SESSION['instructor_id'])) {
+//     header('Location: ../../../login/index.php');
+//     exit();
+// }
 
-$instructor_id = $_SESSION['instructor_id'];
-$instructor_name = $_SESSION['instructor_name'] ?? 'Instructor';
+// $instructor_id = $_SESSION['instructor_id'];
+// $instructor_name = $_SESSION['instructor_name'] ?? 'Instructor';
 
-// Database connection
-try {
-    $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", DB_USER, DB_PASS);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
-}
+$user = $_SESSION['user'];
+$instructor_id = $user['id'];
+$instructor_name = $user['name'];
+
+
 
 // Get today's attendance summary
 $today_stmt = $pdo->prepare("
