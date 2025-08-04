@@ -1,0 +1,10 @@
+Instructor Login:
+
+Email: john@gmail.com
+Password: password123
+
+
+Student Logins:
+
+Email: tharaka@gmail.com / Password: password123
+Email: lahiru@gmail.com / Password: password123

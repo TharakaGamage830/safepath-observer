@@ -2,6 +2,10 @@
 require_once __DIR__ . '/../../../config/config.php';
 require_once __DIR__ . '/../../api/api.php';
 
+
+
+ob_start();
+
 ?>
 
 <!DOCTYPE html>
@@ -18,6 +22,7 @@ require_once __DIR__ . '/../../api/api.php';
             --secondary-color: #f8fafc;
             --success-color: #10b981;
             --warning-color: #f59e0b;
+            --danger-color: #ef4444;
             --dark-color: #1e293b;
         }
 
@@ -119,11 +124,41 @@ require_once __DIR__ . '/../../api/api.php';
         .badge-active {
             background-color: rgba(16, 185, 129, 0.1);
             color: var(--success-color);
+
         }
 
         .badge-pending {
             background-color: rgba(245, 158, 11, 0.1);
             color: var(--warning-color);
+
+        }
+
+        .badge-pending {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        .badge-completed {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--primary-color);
+        }
+
+        .badge-suspended {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+
+        .course-progress {
+            height: 8px;
+            border-radius: 4px;
+            background-color: #e2e8f0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary-color);
+
         }
 
         @media (max-width: 768px) {
@@ -171,6 +206,7 @@ require_once __DIR__ . '/../../api/api.php';
                 </div>
             </div>
             
+
             <!-- Add more stat cards as needed -->
         </div>
 
@@ -217,11 +253,163 @@ require_once __DIR__ . '/../../api/api.php';
                 </table>
             </div>
         </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stat-label">Active Students</div>
+                            <?php
+                            $activeStudentsQuery = "SELECT COUNT(*) as total FROM students WHERE enrollment_status = 'active'";
+                            $activeStudents = $conn->query($activeStudentsQuery)->fetch_assoc()['total'];
+                            ?>
+                            <h2 class="stat-number"><?= $activeStudents ?></h2>
+                        </div>
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stat-label">Completed Courses</div>
+                            <?php
+                            $completedQuery = "SELECT COUNT(*) as total FROM students WHERE enrollment_status = 'completed'";
+                            $completed = $conn->query($completedQuery)->fetch_assoc()['total'];
+                            ?>
+                            <h2 class="stat-number"><?= $completed ?></h2>
+                        </div>
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stat-label">Available Courses</div>
+                            <?php
+                            $coursesQuery = "SELECT COUNT(*) as total FROM courses";
+                            $coursesCount = $conn->query($coursesQuery)->fetch_assoc()['total'];
+                            ?>
+                            <h2 class="stat-number"><?= $coursesCount ?></h2>
+                        </div>
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                            <i class="fas fa-book"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Course Distribution -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h5 class="mb-4">
+                        <i class="fas fa-chart-bar me-2" style="color: var(--primary-color);"></i>
+                        Course Distribution
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>Course</th>
+                                    <th>Students</th>
+                                    <th>Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php 
+                                $totalStudents = max(1, $totalStudents); // Prevent division by zero
+                                while ($course = $courseStats->fetch_assoc()): 
+                                    $percentage = round(($course['student_count'] / $totalStudents) * 100, 1);
+                                ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($course['course_name']) ?></td>
+                                    <td><?= $course['student_count'] ?></td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="course-progress me-2" style="width: 100px;">
+                                                <div class="progress-bar" style="width: <?= $percentage ?>%"></div>
+                                            </div>
+                                            <span><?= $percentage ?>%</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Student Registrations -->
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h5 class="mb-4">
+                        <i class="fas fa-users me-2" style="color: var(--primary-color);"></i>
+                        Recent Student Registrations (Last 7 Days)
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Name</th>
+                                    <th>Course</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if ($recentStudents->num_rows === 0): ?>
+                                    <tr>
+                                        <td colspan="4" class="text-center">No recent registrations</td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php 
+                                    $recentStudents->data_seek(0); // Reset pointer
+                                    while ($student = $recentStudents->fetch_assoc()): 
+                                        $statusClass = 'badge-' . strtolower($student['status']);
+                                        $statusDisplay = ucfirst($student['status']);
+                                    ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($student['student_id']) ?></td>
+                                        <td><?= htmlspecialchars($student['name']) ?></td>
+                                        <td><?= htmlspecialchars($student['course_name']) ?></td>
+                                        <td><span class="status-badge <?= $statusClass ?>"><?= $statusDisplay ?></span></td>
+                                    </tr>
+                                    <?php endwhile; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+
+
+<?php
+
+$content = ob_get_clean();
+include '../components/layout.php';
+
+?>
+
 <?php
 $conn->close();
 ?>

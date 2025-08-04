@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../../../config/config.php';
 require_once __DIR__ . '/../../api/api.php';
+
+ob_start();
 ?>
 
 <!DOCTYPE html>
@@ -12,6 +14,8 @@ require_once __DIR__ . '/../../api/api.php';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        /* Your existing CSS styles here */
+    </style> <style>
         body {
             background-color: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -188,6 +192,7 @@ require_once __DIR__ . '/../../api/api.php';
             margin: 0 3px;
             transition: all 0.2s ease;
             border: none;
+
         }
         
         .view-btn {
@@ -230,6 +235,50 @@ require_once __DIR__ . '/../../api/api.php';
             font-size: 1.1rem;
         }
         
+
+        }
+        
+        .view-btn {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .edit-btn {
+            background-color: #fff8e1;
+            color: #ff8f00;
+        }
+        
+        .delete-btn {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .action-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Empty State */
+        .empty-state {
+            background-color: white;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            color: #e0e0e0;
+            margin-bottom: 15px;
+        }
+        
+        .empty-state p {
+            color: #9e9e9e;
+            font-size: 1.1rem;
+        }
+        
+
         .add-btn {
             margin-bottom: 25px;
             white-space: nowrap;
@@ -365,6 +414,20 @@ require_once __DIR__ . '/../../api/api.php';
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         <?php endif; ?>
+        
+        <?php if (isset($_GET['update_success'])): ?>
+            <div class="alert alert-success alert-dismissible fade show">
+                <?= htmlspecialchars($_GET['update_success']) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+        
+        <?php if (isset($_GET['add_success'])): ?>
+            <div class="alert alert-success alert-dismissible fade show">
+                <?= htmlspecialchars($_GET['add_success']) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
 
         <!-- Student Table -->
         <div class="card" id="studentTableSection">
@@ -416,15 +479,15 @@ require_once __DIR__ . '/../../api/api.php';
                             <?php else: ?>
                                 <?php while ($student = $students->fetch_assoc()): 
                                     // Normalize status value for display and CSS
-                                    $status = strtolower($student['status']);
+                                    $status = strtolower($student['enrollment_status']);
                                     $status = preg_replace('/[^a-z]/', '_', $status);
                                     
                                     // Standardize status values
-                                    if (strpos($status, 'progress') !== false) {
+                                    if ($status === 'active') {
                                         $status = 'progress';
-                                    } elseif (strpos($status, 'not') !== false) {
+                                    } elseif ($status === 'pending') {
                                         $status = 'not_started';
-                                    } elseif (strpos($status, 'complete') !== false) {
+                                    } elseif ($status === 'completed') {
                                         $status = 'completed';
                                     }
                                     
@@ -434,7 +497,11 @@ require_once __DIR__ . '/../../api/api.php';
                                     <td data-label="Student ID"><?= htmlspecialchars($student['student_id']) ?></td>
                                     <td data-label="Name"><?= htmlspecialchars($student['name']) ?></td>
                                     <td data-label="Course"><?= htmlspecialchars($student['course_name']) ?></td>
+
                                     <td data-label="Phone"><?= htmlspecialchars($student['phone_number']) ?></td>
+
+                                    <td data-label="Phone"><?= htmlspecialchars($student['phone']) ?></td>
+
                                     <td data-label="Status">
                                         <span class="status-badge status-<?= htmlspecialchars($status) ?>">
                                             <?= htmlspecialchars($display_status) ?>
@@ -442,15 +509,26 @@ require_once __DIR__ . '/../../api/api.php';
                                     </td>
                                     <td data-label="Actions">
                                         <div class="d-flex action-container">
+
                                             <button class="action-btn view-btn" onclick="viewStudent(<?= $student['id'] ?>)">
                                                 <i class="fas fa-eye"></i>
                                             </button>
                                             <button class="action-btn edit-btn" onclick="editStudent(<?= $student['id'] ?>)">
+
+                                            <button class="action-btn view-btn" onclick="viewStudent('<?= $student['student_id'] ?>')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="action-btn edit-btn" onclick="editStudent('<?= $student['student_id'] ?>')">
+
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <form method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this student?')">
                                                 <input type="hidden" name="action" value="delete_student">
+
                                                 <input type="hidden" name="id" value="<?= $student['id'] ?>">
+
+                                                <input type="hidden" name="id" value="<?= $student['student_id'] ?>">
+
                                                 <button type="submit" class="action-btn delete-btn">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
@@ -473,7 +551,8 @@ require_once __DIR__ . '/../../api/api.php';
                 <form method="post" id="studentForm" onsubmit="return validateForm()">
                     <input type="hidden" name="action" id="formAction" value="add_student">
                     <input type="hidden" name="id" id="studentId">
-                    <input type="hidden" name="status" id="status" value="not_started">
+                    <input type="hidden" name="user_id" id="userId">
+                    <input type="hidden" name="status" id="status" value="pending">
                     
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -496,8 +575,8 @@ require_once __DIR__ . '/../../api/api.php';
                     
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label for="phoneNumber" class="form-label required">Phone Number</label>
-                            <input type="tel" class="form-control" name="phone_number" id="phoneNumber" required>
+                            <label for="phone" class="form-label required">Phone Number</label>
+                            <input type="tel" class="form-control" name="phone" id="phone" required>
                             <div class="invalid-feedback">Please enter a valid phone number</div>
                         </div>
                         <div class="col-md-6">
@@ -519,8 +598,8 @@ require_once __DIR__ . '/../../api/api.php';
                             <div class="invalid-feedback">Please select a gender</div>
                         </div>
                         <div class="col-md-4">
-                            <label for="nationalId" class="form-label required">National ID</label>
-                            <input type="text" class="form-control" name="national_id" id="nationalId" required>
+                            <label for="nationalIdNumber" class="form-label required">National ID</label>
+                            <input type="text" class="form-control" name="national_id_number" id="nationalIdNumber" required>
                             <div class="invalid-feedback">Please enter the national ID</div>
                         </div>
                         <div class="col-md-4">
@@ -546,10 +625,24 @@ require_once __DIR__ . '/../../api/api.php';
                         <div class="col-md-4">
                             <label for="statusDisplay" class="form-label required">Status</label>
                             <select class="form-select" id="statusDisplay" onchange="document.getElementById('status').value = this.value" required>
-                                <option value="not_started">Not Started</option>
-                                <option value="progress">In Progress</option>
+                                <option value="pending">Pending</option>
+                                <option value="active">Active</option>
                                 <option value="completed">Completed</option>
                             </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Password fields for new students -->
+                    <div class="row mb-3" id="passwordSection">
+                        <div class="col-md-6">
+                            <label for="password" class="form-label required">Password</label>
+                            <input type="password" class="form-control" name="password" id="password" required>
+                            <div class="invalid-feedback">Please enter a password</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="confirmPassword" class="form-label required">Confirm Password</label>
+                            <input type="password" class="form-control" name="confirm_password" id="confirmPassword" required>
+                            <div class="invalid-feedback">Passwords must match</div>
                         </div>
                     </div>
                     
@@ -570,7 +663,11 @@ require_once __DIR__ . '/../../api/api.php';
         <div class="modal fade" id="viewStudentModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
+
                     <div class="modal-header  text-white">
+
+                    <div class="modal-header text-white">
+
                         <h5 class="modal-title">Student Details</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -596,17 +693,17 @@ require_once __DIR__ . '/../../api/api.php';
                 .then(response => response.json())
                 .then(student => {
                     // Normalize status for display
-                    const status = student.status.toLowerCase().replace(/[^a-z]/g, '_');
+                    const status = student.enrollment_status.toLowerCase().replace(/[^a-z]/g, '_');
                     let display_status;
                     
-                    if (status.includes('progress')) {
-                        display_status = 'In Progress';
-                    } else if (status.includes('not')) {
-                        display_status = 'Not Started';
-                    } else if (status.includes('complete')) {
+                    if (status === 'active') {
+                        display_status = 'Active';
+                    } else if (status === 'pending') {
+                        display_status = 'Pending';
+                    } else if (status === 'completed') {
                         display_status = 'Completed';
                     } else {
-                        display_status = student.status.replace(/_/g, ' ');
+                        display_status = student.enrollment_status.replace(/_/g, ' ');
                     }
                     
                     document.getElementById('studentDetails').innerHTML = `
@@ -618,9 +715,9 @@ require_once __DIR__ . '/../../api/api.php';
                                 <p><strong>Gender:</strong> ${student.gender.charAt(0).toUpperCase() + student.gender.slice(1)}</p>
                             </div>
                             <div class="col-md-6">
-                                <p><strong>Phone:</strong> ${student.phone_number}</p>
+                                <p><strong>Phone:</strong> ${student.phone}</p>
                                 <p><strong>Email:</strong> ${student.email}</p>
-                                <p><strong>National ID:</strong> ${student.national_id}</p>
+                                <p><strong>National ID:</strong> ${student.national_id_number}</p>
                                 <p><strong>Start Date:</strong> ${student.start_date}</p>
                             </div>
                         </div>
@@ -652,18 +749,29 @@ require_once __DIR__ . '/../../api/api.php';
                 .then(student => {
                     document.getElementById('formTitle').textContent = 'Update Student Details';
                     document.getElementById('formAction').value = 'update_student';
-                    document.getElementById('studentId').value = student.id;
+                    document.getElementById('studentId').value = student.student_id;
+                    document.getElementById('userId').value = student.user_id;
                     document.getElementById('name').value = student.name;
                     document.getElementById('birthDate').value = student.birth_date;
                     document.getElementById('address').value = student.address;
-                    document.getElementById('phoneNumber').value = student.phone_number;
+                    document.getElementById('phone').value = student.phone;
                     document.getElementById('email').value = student.email;
                     document.getElementById('gender').value = student.gender;
-                    document.getElementById('nationalId').value = student.national_id;
+                    document.getElementById('nationalIdNumber').value = student.national_id_number;
                     document.getElementById('startDate').value = student.start_date;
                     document.getElementById('course').value = student.course_id;
-                    document.getElementById('statusDisplay').value = student.status;
-                    document.getElementById('status').value = student.status;
+                    
+                    // Set status correctly
+                    const status = student.enrollment_status.toLowerCase();
+                    document.getElementById('statusDisplay').value = status;
+                    document.getElementById('status').value = status;
+                    
+                    // Hide password fields for editing
+                    document.getElementById('passwordSection').style.display = 'none';
+                    
+                    // Remove required attribute from password fields
+                    document.getElementById('password').removeAttribute('required');
+                    document.getElementById('confirmPassword').removeAttribute('required');
                     
                     document.getElementById('studentTableSection').style.display = 'none';
                     document.getElementById('studentFormSection').style.display = 'block';
@@ -680,12 +788,17 @@ require_once __DIR__ . '/../../api/api.php';
             let isValid = true;
             const form = document.getElementById('studentForm');
             const requiredFields = form.querySelectorAll('[required]');
+            const isUpdate = document.getElementById('formAction').value === 'update_student';
             
+            // Validate all required fields except password if updating
             requiredFields.forEach(field => {
-                field.classList.remove('is-invalid');
-                if (!field.value.trim()) {
-                    field.classList.add('is-invalid');
-                    isValid = false;
+                if (field.style.display !== 'none' && 
+                   (!isUpdate || (isUpdate && field.id !== 'password' && field.id !== 'confirmPassword'))) {
+                    field.classList.remove('is-invalid');
+                    if (!field.value.trim()) {
+                        field.classList.add('is-invalid');
+                        isValid = false;
+                    }
                 }
             });
             
@@ -695,6 +808,22 @@ require_once __DIR__ . '/../../api/api.php';
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(email.value)) {
                     email.classList.add('is-invalid');
+                    isValid = false;
+                }
+            }
+            
+            // Password validation only for new students
+            if (!isUpdate) {
+                const password = document.getElementById('password');
+                const confirmPassword = document.getElementById('confirmPassword');
+                
+                if (password.value !== confirmPassword.value) {
+                    confirmPassword.classList.add('is-invalid');
+                    isValid = false;
+                }
+                
+                if (password.value.length < 8) {
+                    password.classList.add('is-invalid');
                     isValid = false;
                 }
             }
@@ -709,8 +838,19 @@ require_once __DIR__ . '/../../api/api.php';
             document.getElementById('formTitle').textContent = 'Student Registration Form';
             document.getElementById('formAction').value = 'add_student';
             document.getElementById('studentForm').reset();
+
             document.getElementById('statusDisplay').value = 'not_started';
             document.getElementById('status').value = 'not_started';
+
+            document.getElementById('statusDisplay').value = 'pending';
+            document.getElementById('status').value = 'pending';
+            document.getElementById('passwordSection').style.display = 'flex';
+            
+            // Add required attribute back to password fields
+            document.getElementById('password').setAttribute('required', '');
+            document.getElementById('confirmPassword').setAttribute('required', '');
+            
+
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         
@@ -741,6 +881,13 @@ require_once __DIR__ . '/../../api/api.php';
     </script>
 </body>
 </html>
+
+<?php
+
+$content = ob_get_clean();
+include '../components/layout.php';
+
+?>
 <?php
 // Close database connection
 $conn->close();

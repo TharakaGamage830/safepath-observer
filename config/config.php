@@ -3,7 +3,7 @@
 $db_host = 'localhost';
 $db_user = 'root';
 $db_pass = '';
-$db_name = 'driving_school';
+$db_name = 'safepath_observer';
 
 // Create connection
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
