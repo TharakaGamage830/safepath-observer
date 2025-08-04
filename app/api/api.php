@@ -1,5 +1,18 @@
 <?php
 require_once __DIR__ . '/../../config/config.php';
+// Get total number of students
+$totalStudentsQuery = "SELECT COUNT(*) as total FROM students";
+$totalStudentsResult = $conn->query($totalStudentsQuery);
+$totalStudents = $totalStudentsResult->fetch_assoc()['total'];
+
+// Get recent student registrations (last 7 days)
+$recentStudentsQuery = "SELECT s.*, c.name as course_name 
+                       FROM students s 
+                       LEFT JOIN courses c ON s.course_id = c.id
+                       WHERE s.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) 
+                       ORDER BY s.created_at DESC LIMIT 5";
+$recentStudents = $conn->query($recentStudentsQuery);
+
 
 // Get total number of students
 $totalStudentsQuery = "SELECT COUNT(*) as total FROM students";

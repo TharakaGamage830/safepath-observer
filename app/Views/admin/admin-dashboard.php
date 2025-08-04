@@ -2,7 +2,10 @@
 require_once __DIR__ . '/../../../config/config.php';
 require_once __DIR__ . '/../../api/api.php';
 
+
+
 ob_start();
+
 ?>
 
 <!DOCTYPE html>
@@ -121,6 +124,13 @@ ob_start();
         .badge-active {
             background-color: rgba(16, 185, 129, 0.1);
             color: var(--success-color);
+
+        }
+
+        .badge-pending {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+
         }
 
         .badge-pending {
@@ -148,6 +158,7 @@ ob_start();
         .progress-bar {
             height: 100%;
             background-color: var(--primary-color);
+
         }
 
         @media (max-width: 768px) {
@@ -195,6 +206,54 @@ ob_start();
                 </div>
             </div>
             
+
+            <!-- Add more stat cards as needed -->
+        </div>
+
+        <!-- Recent Student Registrations -->
+        <div class="chart-container">
+            <h5 class="mb-4">
+                <i class="fas fa-users me-2" style="color: var(--primary-color);"></i>
+                Recent Student Registrations (Last 7 Days)
+            </h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Course</th>
+                            <th>Phone</th>
+                            <th>Status</th>
+                            <th>Registered</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if ($recentStudents->num_rows === 0): ?>
+                            <tr>
+                                <td colspan="7" class="text-center">No recent registrations</td>
+                            </tr>
+                        <?php else: ?>
+                            <?php while ($student = $recentStudents->fetch_assoc()): 
+                                $statusClass = $student['status'] === 'Active' ? 'badge-active' : 'badge-pending';
+                            ?>
+                            <tr>
+                                <td><?= htmlspecialchars($student['student_id']) ?></td>
+                                <td><?= htmlspecialchars($student['name']) ?></td>
+                                <td><?= htmlspecialchars($student['email']) ?></td>
+                                <td><?= htmlspecialchars($student['course_name']) ?></td>
+                                <td><?= htmlspecialchars($student['phone_number']) ?></td>
+                                <td><span class="status-badge <?= $statusClass ?>"><?= htmlspecialchars($student['status']) ?></span></td>
+                                <td><?= date('M d, Y', strtotime($student['created_at'])) ?></td>
+                            </tr>
+                            <?php endwhile; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
             <div class="col-xl-3 col-md-6 mb-4">
                 <div class="stat-card">
                     <div class="d-flex justify-content-between align-items-center">
@@ -335,11 +394,14 @@ ob_start();
                 </div>
             </div>
         </div>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+
 
 <?php
 
@@ -347,6 +409,7 @@ $content = ob_get_clean();
 include '../components/layout.php';
 
 ?>
+
 <?php
 $conn->close();
 ?>

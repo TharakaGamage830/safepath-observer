@@ -192,6 +192,7 @@ ob_start();
             margin: 0 3px;
             transition: all 0.2s ease;
             border: none;
+
         }
         
         .view-btn {
@@ -234,6 +235,50 @@ ob_start();
             font-size: 1.1rem;
         }
         
+
+        }
+        
+        .view-btn {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .edit-btn {
+            background-color: #fff8e1;
+            color: #ff8f00;
+        }
+        
+        .delete-btn {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .action-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Empty State */
+        .empty-state {
+            background-color: white;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            color: #e0e0e0;
+            margin-bottom: 15px;
+        }
+        
+        .empty-state p {
+            color: #9e9e9e;
+            font-size: 1.1rem;
+        }
+        
+
         .add-btn {
             margin-bottom: 25px;
             white-space: nowrap;
@@ -389,14 +434,14 @@ ob_start();
             <div class="card-header">
                 <h2 class="mb-0">Students Details</h2>
             </div>
-            
+         
             <!-- Search and Add Student Container -->
             <div class="search-container">
                 <!-- Search Box -->
                 <form method="get" class="search-box">
                     <div class="input-group">
                         <input type="text" class="form-control" name="search" placeholder="Search by ID, Name or Status..." 
-                               value="<?= htmlspecialchars($searchTerm) ?>">
+                               value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
                         <i class="fas fa-search"></i>
                     </div>
                     <div class="search-hint">Search by student ID, name, or status</div>
@@ -452,7 +497,11 @@ ob_start();
                                     <td data-label="Student ID"><?= htmlspecialchars($student['student_id']) ?></td>
                                     <td data-label="Name"><?= htmlspecialchars($student['name']) ?></td>
                                     <td data-label="Course"><?= htmlspecialchars($student['course_name']) ?></td>
+
+                                    <td data-label="Phone"><?= htmlspecialchars($student['phone_number']) ?></td>
+
                                     <td data-label="Phone"><?= htmlspecialchars($student['phone']) ?></td>
+
                                     <td data-label="Status">
                                         <span class="status-badge status-<?= htmlspecialchars($status) ?>">
                                             <?= htmlspecialchars($display_status) ?>
@@ -460,15 +509,26 @@ ob_start();
                                     </td>
                                     <td data-label="Actions">
                                         <div class="d-flex action-container">
+
+                                            <button class="action-btn view-btn" onclick="viewStudent(<?= $student['id'] ?>)">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="action-btn edit-btn" onclick="editStudent(<?= $student['id'] ?>)">
+
                                             <button class="action-btn view-btn" onclick="viewStudent('<?= $student['student_id'] ?>')">
                                                 <i class="fas fa-eye"></i>
                                             </button>
                                             <button class="action-btn edit-btn" onclick="editStudent('<?= $student['student_id'] ?>')">
+
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <form method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this student?')">
                                                 <input type="hidden" name="action" value="delete_student">
+
+                                                <input type="hidden" name="id" value="<?= $student['id'] ?>">
+
                                                 <input type="hidden" name="id" value="<?= $student['student_id'] ?>">
+
                                                 <button type="submit" class="action-btn delete-btn">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
@@ -603,7 +663,11 @@ ob_start();
         <div class="modal fade" id="viewStudentModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
+
+                    <div class="modal-header  text-white">
+
                     <div class="modal-header text-white">
+
                         <h5 class="modal-title">Student Details</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -683,7 +747,7 @@ ob_start();
             fetch('<?= $_SERVER['PHP_SELF'] ?>?get_student=' + id)
                 .then(response => response.json())
                 .then(student => {
-                    document.getElementById('formTitle').textContent = 'Edit Student';
+                    document.getElementById('formTitle').textContent = 'Update Student Details';
                     document.getElementById('formAction').value = 'update_student';
                     document.getElementById('studentId').value = student.student_id;
                     document.getElementById('userId').value = student.user_id;
@@ -774,6 +838,10 @@ ob_start();
             document.getElementById('formTitle').textContent = 'Student Registration Form';
             document.getElementById('formAction').value = 'add_student';
             document.getElementById('studentForm').reset();
+
+            document.getElementById('statusDisplay').value = 'not_started';
+            document.getElementById('status').value = 'not_started';
+
             document.getElementById('statusDisplay').value = 'pending';
             document.getElementById('status').value = 'pending';
             document.getElementById('passwordSection').style.display = 'flex';
@@ -782,6 +850,7 @@ ob_start();
             document.getElementById('password').setAttribute('required', '');
             document.getElementById('confirmPassword').setAttribute('required', '');
             
+
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         
