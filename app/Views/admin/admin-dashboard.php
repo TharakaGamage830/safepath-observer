@@ -243,7 +243,7 @@ ob_start();
                                 <td><?= htmlspecialchars($student['name']) ?></td>
                                 <td><?= htmlspecialchars($student['email']) ?></td>
                                 <td><?= htmlspecialchars($student['course_name']) ?></td>
-                                <td><?= htmlspecialchars($student['phone_number']) ?></td>
+                                <td><?= htmlspecialchars($student['phone']) ?></td>
                                 <td><span class="status-badge <?= $statusClass ?>"><?= htmlspecialchars($student['status']) ?></span></td>
                                 <td><?= date('M d, Y', strtotime($student['created_at'])) ?></td>
                             </tr>

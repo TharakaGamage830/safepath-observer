@@ -189,7 +189,7 @@ ob_start();
 <!-- Scripts -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 <script>
-    const apiURL = '/SafePathObserver/app/API/course_api.php';
+    const apiURL = '../../api/course_api.php';
 
     function submitCourseForm(type) {
         const form = document.getElementById(type === 'add' ? 'addCourseForm' : 'editCourseForm');
@@ -246,33 +246,106 @@ ob_start();
         }
     }
 
+
     function downloadPDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.setFontSize(20).text('SafePathObserver - Course Details', 20, 20);
-        doc.setFontSize(12).text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 35);
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('portrait'); // Changed to portrait
 
-        const table = document.getElementById('coursesTable');
-        const rows = [];
+    doc.setFontSize(20).text('SafePathObserver - Course Details', 20, 20);
+    doc.setFontSize(12).text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 35);
 
-        table.querySelectorAll('tbody tr').forEach(row => {
-            if (row.cells.length > 1) {
-                const rowData = Array.from(row.cells).slice(0, 6).map(cell => cell.textContent.trim());
-                rows.push(rowData);
+    const table = document.getElementById('coursesTable');
+    const rows = [];
+
+    // Helper function to decode and clean special characters
+    const decodeAndClean = (text) => {
+        const txt = document.createElement("textarea");
+        txt.innerHTML = text;
+        return txt.value
+            .replace(/“|”/g, '"')
+            .replace(/‘|’/g, "'")
+            .replace(/≤/g, '<=')
+            .replace(/≥/g, '>=')
+            .replace(/–|—/g, '-')
+            .replace(/•/g, '-')
+            .replace(/→/g, '->')
+            .replace(/“d/g, '<=') // Fix misinterpreted encoding
+            .replace(/”d/g, '<=') // Just in case
+            .trim();
+    };
+
+    table.querySelectorAll('tbody tr').forEach(row => {
+        if (row.cells.length > 1) {
+            const rowData = [];
+
+            // First 5 columns
+            for (let i = 0; i < 5; i++) {
+                const cleanText = decodeAndClean(row.cells[i].textContent);
+                rowData.push(cleanText);
             }
-        });
 
-        doc.autoTable({
-            head: [['Course ID', 'Course Name', 'Type', 'Duration', 'Fee (LKR)', 'Description']],
-            body: rows,
-            startY: 45,
-            theme: 'grid',
-            headStyles: { fillColor: [0, 123, 255], textColor: 255 },
-            alternateRowStyles: { fillColor: [245, 245, 245] }
-        });
+            // Description column (6th)
+            const descCell = row.cells[5];
+            let description = '';
 
-        doc.save('SafePathObserver-Courses.pdf');
-    }
+            const truncatedSpan = descCell.querySelector('.text-truncate');
+            if (truncatedSpan && truncatedSpan.hasAttribute('title')) {
+                description = truncatedSpan.getAttribute('title');
+            } else {
+                description = descCell.textContent;
+            }
+
+            // Clean description
+            description = decodeAndClean(description);
+
+            // Optional: limit long descriptions
+            if (description.length > 100) {
+                description = description.substring(0, 100) + '...';
+            }
+
+            rowData.push(description);
+            rows.push(rowData);
+        }
+    });
+
+    // Generate PDF table
+    doc.autoTable({
+        head: [['Course ID', 'Course Name', 'Type', 'Duration', 'Fee (LKR)', 'Description']],
+        body: rows,
+        startY: 45,
+        theme: 'grid',
+        headStyles: {
+            fillColor: [0, 123, 255],
+            textColor: 255,
+            fontSize: 10
+        },
+        bodyStyles: {
+            fontSize: 9
+        },
+        alternateRowStyles: {
+            fillColor: [245, 245, 245]
+        },
+        columnStyles: {
+            0: { cellWidth: 20 }, // Course ID
+            1: { cellWidth: 35 }, // Course Name
+            2: { cellWidth: 20 }, // Type
+            3: { cellWidth: 25 }, // Duration
+            4: { cellWidth: 25 }, // Fee
+            5: { cellWidth: 50 }  // Description
+        },
+        styles: {
+            cellPadding: 3,
+            overflow: 'linebreak',
+            halign: 'left'
+        },
+        margin: { top: 45, right: 20, bottom: 20, left: 20 }
+    });
+
+    doc.save('SafePathObserver-Courses.pdf');
+}
+
+
+
 </script>
 </body>
 </html>
@@ -280,3 +353,4 @@ ob_start();
 <?php
 $content = ob_get_clean();
 include '../components/layout.php';
+?>

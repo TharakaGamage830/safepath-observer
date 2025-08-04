@@ -42,6 +42,22 @@ CREATE TABLE `instructors` (
   INDEX `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+
+-- Courses table
+CREATE TABLE `courses` (
+  `course_id` int(11) NOT NULL AUTO_INCREMENT,
+  `course_name` varchar(255) NOT NULL,
+  `course_type` varchar(100) NOT NULL,
+  `duration_days` int(11) NOT NULL,
+  `course_fee` decimal(10,2) NOT NULL,
+  `description` text DEFAULT NULL,
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`course_id`),
+  INDEX `idx_course_type` (`course_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
 -- Students table (extends users table with student-specific information)
 CREATE TABLE `students` (
   `student_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -68,19 +84,7 @@ CREATE TABLE `students` (
   INDEX `idx_start_date` (`start_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Courses table
-CREATE TABLE `courses` (
-  `course_id` int(11) NOT NULL AUTO_INCREMENT,
-  `course_name` varchar(255) NOT NULL,
-  `course_type` varchar(100) NOT NULL,
-  `duration_days` int(11) NOT NULL,
-  `course_fee` decimal(10,2) NOT NULL,
-  `description` text DEFAULT NULL,
-  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`course_id`),
-  INDEX `idx_course_type` (`course_type`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 -- Student Course Assignments table (linking students to instructors and courses)
 CREATE TABLE `student_course_assignments` (
@@ -94,8 +98,8 @@ CREATE TABLE `student_course_assignments` (
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`assignment_id`),
-  FOREIGN KEY (`student_id`) REFERENCES `users`(`user_id`) ON DELETE CASCADE,
-  FOREIGN KEY (`instructor_id`) REFERENCES `users`(`user_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`student_id`) REFERENCES `students`(`student_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`instructor_id`) REFERENCES `instructors`(`instructor_id`) ON DELETE CASCADE,
   FOREIGN KEY (`course_id`) REFERENCES `courses`(`course_id`) ON DELETE CASCADE,
   UNIQUE KEY `unique_student_course` (`student_id`, `course_id`),
   INDEX `idx_student_id` (`student_id`),
@@ -115,8 +119,8 @@ CREATE TABLE `attendance` (
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`attendance_id`),
-  FOREIGN KEY (`student_id`) REFERENCES `users`(`user_id`) ON DELETE CASCADE,
-  FOREIGN KEY (`instructor_id`) REFERENCES `users`(`user_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`student_id`) REFERENCES `students`(`student_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`instructor_id`) REFERENCES `instructors`(`instructor_id`) ON DELETE CASCADE,
   FOREIGN KEY (`course_id`) REFERENCES `courses`(`course_id`) ON DELETE CASCADE,
   UNIQUE KEY `unique_student_date` (`student_id`, `attendance_date`),
   INDEX `idx_student_date` (`student_id`, `attendance_date`),
@@ -125,19 +129,26 @@ CREATE TABLE `attendance` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
--- Views for easier data access
 
--- View for student progress
+
+
+
+
+
+
+
+
+-- View for student progress (Fixed to use proper table relationships)
 CREATE VIEW `student_progress_view` AS
 SELECT 
-    u.user_id as student_id,
+    s.student_id,
     u.name as student_name,
     u.email,
     u.profile_picture,
     c.course_name,
     c.course_type,
     c.duration_days,
-    sca.instructor_id,
+    s.instructor_id,
     sca.enrollment_date,
     COUNT(CASE WHEN a.status = 'present' THEN 1 END) as days_present,
     COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as days_absent,
@@ -147,14 +158,15 @@ SELECT
             ROUND((COUNT(CASE WHEN a.status = 'present' THEN 1 END) / c.duration_days) * 100, 2)
         ELSE 0 
     END as progress_percentage
-FROM users u
-INNER JOIN student_course_assignments sca ON u.user_id = sca.student_id
+FROM students s
+INNER JOIN users u ON s.user_id = u.user_id
+INNER JOIN student_course_assignments sca ON s.student_id = sca.student_id
 INNER JOIN courses c ON sca.course_id = c.course_id
-LEFT JOIN attendance a ON u.user_id = a.student_id
+LEFT JOIN attendance a ON s.student_id = a.student_id AND sca.course_id = a.course_id
 WHERE u.role = 'student' AND sca.status = 'active'
-GROUP BY u.user_id, u.name, u.email, u.profile_picture, c.course_name, c.course_type, c.duration_days, sca.instructor_id, sca.enrollment_date;
+GROUP BY s.student_id, u.name, u.email, u.profile_picture, c.course_name, c.course_type, c.duration_days, s.instructor_id, sca.enrollment_date;
 
--- View to get complete student information
+-- View to get complete student information (Fixed foreign key relationships)
 CREATE VIEW `student_details_view` AS
 SELECT 
     s.student_id,
@@ -171,7 +183,7 @@ SELECT
     s.enrollment_status,
     s.completion_date,
     s.instructor_id,
-    i.name as instructor_name,
+    iu.name as instructor_name,
     s.course_id,
     c.course_name,
     c.course_type,
@@ -181,12 +193,12 @@ SELECT
     u.created_at as user_created_at
 FROM students s
 INNER JOIN users u ON s.user_id = u.user_id
-LEFT JOIN instructors inst ON s.instructor_id = inst.instructor_id
-LEFT JOIN users i ON inst.user_id = i.user_id
+LEFT JOIN instructors i ON s.instructor_id = i.instructor_id
+LEFT JOIN users iu ON i.user_id = iu.user_id
 LEFT JOIN courses c ON s.course_id = c.course_id
 WHERE u.role = 'student';
 
--- View for instructor's students
+-- View for instructor's students (Fixed to properly reference instructor relationships)
 CREATE VIEW `instructor_students_view` AS
 SELECT 
     s.student_id,
@@ -198,18 +210,18 @@ SELECT
     s.start_date,
     c.course_name,
     c.course_type,
-    i.name as instructor_name,
-    s.instructor_id,
-    inst.instructor_id as instructor_table_id
+    iu.name as instructor_name,
+    i.instructor_id,
+    s.instructor_id as student_instructor_id
 FROM students s
 INNER JOIN users u ON s.user_id = u.user_id
-INNER JOIN instructors inst ON s.instructor_id = inst.instructor_id
-INNER JOIN users i ON inst.user_id = i.user_id
+INNER JOIN instructors i ON s.instructor_id = i.instructor_id
+INNER JOIN users iu ON i.user_id = iu.user_id
 LEFT JOIN courses c ON s.course_id = c.course_id
 WHERE u.role = 'student' 
 AND s.instructor_id IS NOT NULL;
 
--- View to get complete instructor information
+-- View to get complete instructor information (This one was mostly correct)
 CREATE VIEW `instructor_details_view` AS
 SELECT 
     i.instructor_id,
@@ -234,17 +246,72 @@ FROM instructors i
 INNER JOIN users u ON i.user_id = u.user_id
 WHERE u.role = 'instructor';
 
--- View for daily attendance summary
+-- View for daily attendance summary (Added instructor name for better reporting)
 CREATE VIEW `daily_attendance_summary` AS
 SELECT 
     DATE(a.attendance_date) as attendance_date,
     a.instructor_id,
+    iu.name as instructor_name,
     COUNT(CASE WHEN a.status = 'present' THEN 1 END) as present_count,
     COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as absent_count,
     COUNT(a.attendance_id) as total_marked
 FROM attendance a
-GROUP BY DATE(a.attendance_date), a.instructor_id
+INNER JOIN instructors i ON a.instructor_id = i.instructor_id
+INNER JOIN users iu ON i.user_id = iu.user_id
+GROUP BY DATE(a.attendance_date), a.instructor_id, iu.name
 ORDER BY attendance_date DESC;
+
+-- Additional useful views
+
+-- View for course enrollment statistics
+CREATE VIEW `course_enrollment_stats` AS
+SELECT 
+    c.course_id,
+    c.course_name,
+    c.course_type,
+    c.duration_days,
+    c.course_fee,
+    COUNT(sca.student_id) as total_enrollments,
+    COUNT(CASE WHEN sca.status = 'active' THEN 1 END) as active_enrollments,
+    COUNT(CASE WHEN sca.status = 'completed' THEN 1 END) as completed_enrollments,
+    COUNT(CASE WHEN sca.status = 'dropped' THEN 1 END) as dropped_enrollments
+FROM courses c
+LEFT JOIN student_course_assignments sca ON c.course_id = sca.course_id
+GROUP BY c.course_id, c.course_name, c.course_type, c.duration_days, c.course_fee;
+
+-- View for instructor workload
+CREATE VIEW `instructor_workload_view` AS
+SELECT 
+    i.instructor_id,
+    u.name as instructor_name,
+    u.email,
+    COUNT(DISTINCT s.student_id) as total_students,
+    COUNT(DISTINCT sca.course_id) as courses_teaching,
+    COUNT(CASE WHEN s.enrollment_status = 'active' THEN 1 END) as active_students,
+    COUNT(CASE WHEN s.enrollment_status = 'completed' THEN 1 END) as completed_students
+FROM instructors i
+INNER JOIN users u ON i.user_id = u.user_id
+LEFT JOIN students s ON i.instructor_id = s.instructor_id
+LEFT JOIN student_course_assignments sca ON s.student_id = sca.student_id AND i.instructor_id = sca.instructor_id
+WHERE u.role = 'instructor' AND i.status = 'active'
+GROUP BY i.instructor_id, u.name, u.email;
+
+-- View for attendance tracking by course
+CREATE VIEW `course_attendance_view` AS
+SELECT 
+    c.course_id,
+    c.course_name,
+    c.course_type,
+    DATE(a.attendance_date) as attendance_date,
+    COUNT(CASE WHEN a.status = 'present' THEN 1 END) as present_count,
+    COUNT(CASE WHEN a.status = 'absent' THEN 1 END) as absent_count,
+    COUNT(a.attendance_id) as total_marked,
+    ROUND((COUNT(CASE WHEN a.status = 'present' THEN 1 END) / COUNT(a.attendance_id)) * 100, 2) as attendance_percentage
+FROM courses c
+INNER JOIN attendance a ON c.course_id = a.course_id
+GROUP BY c.course_id, c.course_name, c.course_type, DATE(a.attendance_date)
+ORDER BY attendance_date DESC, c.course_name;
+
 
 -- Additional indexes for better performance
 CREATE INDEX idx_attendance_date ON attendance(attendance_date);
@@ -252,42 +319,15 @@ CREATE INDEX idx_attendance_student_date ON attendance(student_id, attendance_da
 CREATE INDEX idx_attendance_instructor_date ON attendance(instructor_id, attendance_date);
 CREATE INDEX idx_sca_student_instructor ON student_course_assignments(student_id, instructor_id);
 CREATE INDEX idx_sca_status ON student_course_assignments(status);
-CREATE TABLE `users` (
-  `user_id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) NOT NULL,
-  `email` varchar(255) NOT NULL UNIQUE,
-  `password` varchar(255) NOT NULL,
-  `role` enum('student','instructor','admin') NOT NULL,
-  `profile_picture` varchar(255) DEFAULT NULL,
-  `phone` varchar(20) DEFAULT NULL,
-  `address` text DEFAULT NULL,
-  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`user_id`),
-  INDEX `idx_email` (`email`),
-  INDEX `idx_role` (`role`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Indexes for better performance
-CREATE INDEX idx_attendance_date ON attendance(attendance_date);
-CREATE INDEX idx_attendance_student_date ON attendance(student_id, attendance_date);
-CREATE INDEX idx_attendance_instructor_date ON attendance(instructor_id, attendance_date);
-CREATE INDEX idx_sca_student_instructor ON student_course_assignments(student_id, instructor_id);
-CREATE INDEX idx_sca_status ON student_course_assignments(status);
+
+
+
+
+
 
 
 ------Insertion data for all tables and views
-
-
--- SafePathObserver Database - Sri Lankan Mock Data
-
--- Clear existing data
-DELETE FROM attendance;
-DELETE FROM student_course_assignments;
-DELETE FROM students;
-DELETE FROM instructors;
-DELETE FROM users WHERE role != 'admin';
-DELETE FROM courses;
 
 -- Insert Courses (using provided data)
 INSERT INTO `courses` (`course_id`, `course_name`, `course_type`, `duration_days`, `course_fee`, `description`, `created_at`, `updated_at`) VALUES
@@ -333,7 +373,6 @@ INSERT INTO `users` (`name`, `email`, `password`, `role`, `phone`, `address`, `p
 ('Gayani Wickremasinghe', 'gayani.wickremasinghe@gmail.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'student', '+94778901234', 'No. 741, Horana Road, Panadura, Western Province, Sri Lanka', 'uploads/students/gayani_profile.jpg', '2025-08-03 13:25:00');
 
 -- Insert instructor details using the actual user_ids from the query above
--- Replace these user_ids with the actual ones from your SELECT query
 INSERT INTO `instructors` (`user_id`, `birth_date`, `gender`, `national_id_number`, `experience_years`, `driving_license_number`, `vehicle_type`, `status`, `hire_date`) VALUES
 -- Mahinda Rajapaksha (should be user_id 2 if admin is 1)
 ((SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk'), '1978-03-15', 'male', '782751234V', 12, 'B1234567', 'Heavy Vehicle', 'active', '2020-01-15'),
@@ -345,6 +384,12 @@ INSERT INTO `instructors` (`user_id`, `birth_date`, `gender`, `national_id_numbe
 ((SELECT user_id FROM users WHERE email = 'nilanthi.perera@safepath.lk'), '1980-09-14', 'female', '804567891V', 15, 'B4567890', 'Heavy Vehicle', 'active', '2019-08-20'),
 -- Sampath Gunawardena
 ((SELECT user_id FROM users WHERE email = 'sampath.gunawardena@safepath.lk'), '1987-05-30', 'male', '873456789V', 7, 'B5678901', 'Light Vehicle', 'active', '2023-02-15');
+
+
+
+
+
+
 
 
 -- Insert Student Details (using dynamic ID resolution)
@@ -422,298 +467,87 @@ INSERT INTO `students` (`user_id`, `instructor_id`, `course_id`, `birth_date`, `
  '1999-10-17', 'female', '992345678V', '2025-07-26', 'active');
 
 
--- Insert Student Course Assignments (using user_id instead of student_id)
+
+
+
+
+
+
+-- CORRECTED: Insert Student Course Assignments (using student_id instead of user_id)
 INSERT INTO `student_course_assignments` (`student_id`, `instructor_id`, `course_id`, `enrollment_date`, `status`) VALUES
 -- Kasun Madhusanka -> Mahinda Rajapaksha -> Motor Car Training
-((SELECT user_id FROM users WHERE email = 'kasun.madhusanka@gmail.com'), 
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'kasun.madhusanka@gmail.com'), 
  (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
  (SELECT course_id FROM courses WHERE course_name = 'Motor Car Training'), 
  '2025-07-15', 'active'),
 
 -- Dilani Jayawardene -> Kamala Wijesinghe -> Motorcycle Training
-((SELECT user_id FROM users WHERE email = 'dilani.jayawardene@gmail.com'), 
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'dilani.jayawardene@gmail.com'), 
  (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'kamala.wijesinghe@safepath.lk')), 
  (SELECT course_id FROM courses WHERE course_name = 'Motorcycle Training'), 
  '2025-07-16', 'active'),
 
 -- Ruwan Kumara -> Mahinda Rajapaksha -> Motor Car Training
-((SELECT user_id FROM users WHERE email = 'ruwan.kumara@gmail.com'), 
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'ruwan.kumara@gmail.com'), 
  (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
  (SELECT course_id FROM courses WHERE course_name = 'Motor Car Training'), 
  '2025-07-17', 'active'),
 
 -- Tharindu Wickramasinghe -> Pradeep Fernando -> Light Motorcycle Training
-((SELECT user_id FROM users WHERE email = 'tharindu.wickramasinghe@gmail.com'), 
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'tharindu.wickramasinghe@gmail.com'), 
  (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'pradeep.fernando@safepath.lk')), 
  (SELECT course_id FROM courses WHERE course_name = 'Light Motorcycle Training'), 
  '2025-07-18', 'active'),
 
 -- Shani Mendis -> Kamala Wijesinghe -> Dual-purpose Vehicle Training
-((SELECT user_id FROM users WHERE email = 'shani.mendis@gmail.com'), 
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'shani.mendis@gmail.com'), 
  (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'kamala.wijesinghe@safepath.lk')), 
  (SELECT course_id FROM courses WHERE course_name = 'Dual-purpose Vehicle Training'), 
  '2025-07-19', 'active'),
 
 -- Chamara Silva -> Nilanthi Perera -> Heavy Car Training
-((SELECT user_id FROM users WHERE email = 'chamara.silva@gmail.com'), 
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'chamara.silva@gmail.com'), 
  (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'nilanthi.perera@safepath.lk')), 
  (SELECT course_id FROM courses WHERE course_name = 'Heavy Car Training'), 
  '2025-07-20', 'active'),
 
 -- Nimesha Rathnayake -> Mahinda Rajapaksha -> Light Tricycle/Van Training
-((SELECT user_id FROM users WHERE email = 'nimesha.rathnayake@gmail.com'), 
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'nimesha.rathnayake@gmail.com'), 
  (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
  (SELECT course_id FROM courses WHERE course_name = 'Light Tricycle/Van Training'), 
  '2025-07-21', 'active'),
 
 -- Lahiru Gamage -> Sampath Gunawardena -> Passenger Vehicle Training (≤ 32)
-((SELECT user_id FROM users WHERE email = 'lahiru.gamage@gmail.com'), 
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'lahiru.gamage@gmail.com'), 
  (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'sampath.gunawardena@safepath.lk')), 
  (SELECT course_id FROM courses WHERE course_name = 'Passenger Vehicle Training (≤ 32)'), 
  '2025-07-22', 'active'),
 
 -- Malika Fernando -> Pradeep Fernando -> Light Motorcycle Training
-((SELECT user_id FROM users WHERE email = 'malika.fernando@gmail.com'), 
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'malika.fernando@gmail.com'), 
  (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'pradeep.fernando@safepath.lk')), 
  (SELECT course_id FROM courses WHERE course_name = 'Light Motorcycle Training'), 
  '2025-07-23', 'active'),
 
 -- Ishara Perera -> Kamala Wijesinghe -> Light Lorry Training
-((SELECT user_id FROM users WHERE email = 'ishara.perera@gmail.com'), 
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'ishara.perera@gmail.com'), 
  (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'kamala.wijesinghe@safepath.lk')), 
  (SELECT course_id FROM courses WHERE course_name = 'Light Lorry Training'), 
  '2025-07-24', 'active'),
 
 -- Sahan Dissanayake -> Nilanthi Perera -> Mini Bus Training (≤ 16)
-((SELECT user_id FROM users WHERE email = 'sahan.dissanayake@gmail.com'), 
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'sahan.dissanayake@gmail.com'), 
  (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'nilanthi.perera@safepath.lk')), 
  (SELECT course_id FROM courses WHERE course_name = 'Mini Bus Training (≤ 16)'), 
  '2025-07-25', 'active'),
 
 -- Gayani Wickremasinghe -> Mahinda Rajapaksha -> Ambulance/Hearse Training
-((SELECT user_id FROM users WHERE email = 'gayani.wickremasinghe@gmail.com'), 
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'gayani.wickremasinghe@gmail.com'), 
  (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
  (SELECT course_id FROM courses WHERE course_name = 'Ambulance/Hearse Training'), 
  '2025-07-26', 'active');
 
 
--- Updated Attendance Records (using user_id for student reference)
-    INSERT INTO `attendance` (`student_id`, `instructor_id`, `course_id`, `attendance_date`, `status`, `notes`) VALUES
-    -- Week 1: 2025-07-21 to 2025-07-27
-    -- Kasun Madhusanka (Motor Car Training)
-    ((SELECT user_id FROM users WHERE email = 'kasun.madhusanka@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Motor Car Training'), 
-    '2025-07-21', 'present', 'Good performance in practical driving'),
-
-    -- Dilani Jayawardene (Motorcycle Training)
-    ((SELECT user_id FROM users WHERE email = 'dilani.jayawardene@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'kamala.wijesinghe@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Motorcycle Training'), 
-    '2025-07-21', 'present', 'Excellent motorcycle handling skills'),
-
-    -- Ruwan Kumara (Motor Car Training)
-    ((SELECT user_id FROM users WHERE email = 'ruwan.kumara@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Motor Car Training'), 
-    '2025-07-21', 'absent', 'Family emergency'),
-
-    -- Tharindu Wickramasinghe (Light Motorcycle Training)
-    ((SELECT user_id FROM users WHERE email = 'tharindu.wickramasinghe@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'pradeep.fernando@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Light Motorcycle Training'), 
-    '2025-07-21', 'present', 'Quick learner, good progress'),
-
-    -- Shani Mendis (Dual-purpose Vehicle Training)
-    ((SELECT user_id FROM users WHERE email = 'shani.mendis@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'kamala.wijesinghe@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Dual-purpose Vehicle Training'), 
-    '2025-07-21', 'present', 'Need more practice on parking'),
-
-    -- Chamara Silva (Heavy Car Training)
-    ((SELECT user_id FROM users WHERE email = 'chamara.silva@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'nilanthi.perera@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Heavy Car Training'), 
-    '2025-07-21', 'present', 'Advanced driving techniques practiced'),
-
-    -- Day 2: 2025-07-22
-    -- Kasun Madhusanka
-    ((SELECT user_id FROM users WHERE email = 'kasun.madhusanka@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Motor Car Training'), 
-    '2025-07-22', 'present', 'Improved steering control'),
-
-    -- Dilani Jayawardene
-    ((SELECT user_id FROM users WHERE email = 'dilani.jayawardene@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'kamala.wijesinghe@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Motorcycle Training'), 
-    '2025-07-22', 'present', 'Mastered gear shifting'),
-
-    -- Ruwan Kumara
-    ((SELECT user_id FROM users WHERE email = 'ruwan.kumara@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Motor Car Training'), 
-    '2025-07-22', 'present', 'Made up for missed lesson'),
-
-    -- Tharindu Wickramasinghe
-    ((SELECT user_id FROM users WHERE email = 'tharindu.wickramasinghe@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'pradeep.fernando@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Light Motorcycle Training'), 
-    '2025-07-22', 'present', 'Highway driving practice'),
-
-    -- Shani Mendis
-    ((SELECT user_id FROM users WHERE email = 'shani.mendis@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'kamala.wijesinghe@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Dual-purpose Vehicle Training'), 
-    '2025-07-22', 'absent', 'Medical appointment'),
-
-    -- Chamara Silva
-    ((SELECT user_id FROM users WHERE email = 'chamara.silva@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'nilanthi.perera@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Heavy Car Training'), 
-    '2025-07-22', 'present', 'Heavy vehicle maneuvering'),
-
-    -- Day 3: 2025-07-23
-    -- Kasun Madhusanka
-    ((SELECT user_id FROM users WHERE email = 'kasun.madhusanka@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Motor Car Training'), 
-    '2025-07-23', 'present', 'Parallel parking practice'),
-
-    -- Dilani Jayawardene
-    ((SELECT user_id FROM users WHERE email = 'dilani.jayawardene@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'kamala.wijesinghe@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Motorcycle Training'), 
-    '2025-07-23', 'present', 'Traffic rules theory test passed'),
-
-    -- Ruwan Kumara
-    ((SELECT user_id FROM users WHERE email = 'ruwan.kumara@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Motor Car Training'), 
-    '2025-07-23', 'present', 'Confidence building exercises'),
-
-    -- Tharindu Wickramasinghe
-    ((SELECT user_id FROM users WHERE email = 'tharindu.wickramasinghe@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'pradeep.fernando@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Light Motorcycle Training'), 
-    '2025-07-23', 'present', 'Night driving practice'),
-
-    -- Shani Mendis
-    ((SELECT user_id FROM users WHERE email = 'shani.mendis@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'kamala.wijesinghe@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Dual-purpose Vehicle Training'), 
-    '2025-07-23', 'present', 'Clutch control improvement'),
-
-    -- Chamara Silva
-    ((SELECT user_id FROM users WHERE email = 'chamara.silva@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'nilanthi.perera@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Heavy Car Training'), 
-    '2025-07-23', 'present', 'Commercial vehicle regulations'),
-
-    -- Week 2: 2025-07-28 to 2025-08-03
-    -- Nimesha Rathnayake (Light Tricycle/Van Training)
-    ((SELECT user_id FROM users WHERE email = 'nimesha.rathnayake@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Light Tricycle/Van Training'), 
-    '2025-07-28', 'present', 'Three-wheeler basics covered'),
-
-    -- Lahiru Gamage (Passenger Vehicle Training)
-    ((SELECT user_id FROM users WHERE email = 'lahiru.gamage@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'sampath.gunawardena@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Passenger Vehicle Training (≤ 32)'), 
-    '2025-07-28', 'present', 'Passenger safety protocols'),
-
-    -- Malika Fernando (Light Motorcycle Training)
-    ((SELECT user_id FROM users WHERE email = 'malika.fernando@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'pradeep.fernando@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Light Motorcycle Training'), 
-    '2025-07-28', 'present', 'Beginner motorcycle lessons'),
-
-    -- Ishara Perera (Light Lorry Training)
-    ((SELECT user_id FROM users WHERE email = 'ishara.perera@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'kamala.wijesinghe@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Light Lorry Training'), 
-    '2025-07-28', 'present', 'Light lorry loading techniques'),
-
-    -- Sahan Dissanayake (Mini Bus Training)
-    ((SELECT user_id FROM users WHERE email = 'sahan.dissanayake@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'nilanthi.perera@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Mini Bus Training (≤ 16)'), 
-    '2025-07-28', 'present', 'Mini bus driving fundamentals'),
-
-    -- Gayani Wickremasinghe (Ambulance/Hearse Training)
-    ((SELECT user_id FROM users WHERE email = 'gayani.wickremasinghe@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Ambulance/Hearse Training'), 
-    '2025-07-28', 'present', 'Emergency vehicle procedures'),
-
-    -- Continue with remaining attendance records (2025-07-29 to 2025-08-03)
-    -- Day 2: 2025-07-29
-    -- Nimesha Rathnayake
-    ((SELECT user_id FROM users WHERE email = 'nimesha.rathnayake@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Light Tricycle/Van Training'), 
-    '2025-07-29', 'present', 'Van driving on main roads'),
-
-    -- Lahiru Gamage
-    ((SELECT user_id FROM users WHERE email = 'lahiru.gamage@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'sampath.gunawardena@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Passenger Vehicle Training (≤ 32)'), 
-    '2025-07-29', 'absent', 'Personal work commitment'),
-
-    -- Malika Fernando
-    ((SELECT user_id FROM users WHERE email = 'malika.fernando@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'pradeep.fernando@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Light Motorcycle Training'), 
-    '2025-07-29', 'present', 'Motorcycle balance exercises'),
-
-    -- Ishara Perera
-    ((SELECT user_id FROM users WHERE email = 'ishara.perera@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'kamala.wijesinghe@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Light Lorry Training'), 
-    '2025-07-29', 'present', 'Commercial driving ethics'),
-
-    -- Sahan Dissanayake
-    ((SELECT user_id FROM users WHERE email = 'sahan.dissanayake@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'nilanthi.perera@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Mini Bus Training (≤ 16)'), 
-    '2025-07-29', 'present', 'Passenger vehicle inspection'),
-
-    -- Gayani Wickremasinghe
-    ((SELECT user_id FROM users WHERE email = 'gayani.wickremasinghe@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Ambulance/Hearse Training'), 
-    '2025-07-29', 'present', 'Medical emergency response'),
-
-    -- Day 3: 2025-07-30
-    -- Nimesha Rathnayake
-    ((SELECT user_id FROM users WHERE email = 'nimesha.rathnayake@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Light Tricycle/Van Training'), 
-    '2025-07-30', 'present', 'City traffic navigation'),
-
-    -- Lahiru Gamage
-    ((SELECT user_id FROM users WHERE email = 'lahiru.gamage@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'sampath.gunawardena@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Passenger Vehicle Training (≤ 32)'), 
-    '2025-07-30', 'present', 'Route planning strategies'),
-
-    -- Final days (2025-08-01 to 2025-08-03) - Add remaining records as needed
-    -- Day 4: 2025-08-01
-    -- Kasun Madhusanka
-    ((SELECT user_id FROM users WHERE email = 'kasun.madhusanka@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Motor Car Training'), 
-    '2025-08-01', 'present', 'Advanced parking techniques'),
-
-    -- Add more attendance records as needed...
-
-    -- Day 6: 2025-08-03 (today)
-    -- Gayani Wickremasinghe
-    ((SELECT user_id FROM users WHERE email = 'gayani.wickremasinghe@gmail.com'), 
-    (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
-    (SELECT course_id FROM courses WHERE course_name = 'Ambulance/Hearse Training'), 
-    '2025-08-03', 'present', 'Emergency response certification');
 
 
 
@@ -721,14 +555,236 @@ INSERT INTO `student_course_assignments` (`student_id`, `instructor_id`, `course
 
 
 
---Here these are the user account creation
 
 
+
+-- CORRECTED: Attendance Records (using student_id for student reference)
+INSERT INTO `attendance` (`student_id`, `instructor_id`, `course_id`, `attendance_date`, `status`, `notes`) VALUES
+-- Week 1: 2025-07-21 to 2025-07-27
+-- Kasun Madhusanka (Motor Car Training)
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'kasun.madhusanka@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Motor Car Training'), 
+'2025-07-21', 'present', 'Good performance in practical driving'),
+
+-- Dilani Jayawardene (Motorcycle Training)
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'dilani.jayawardene@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'kamala.wijesinghe@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Motorcycle Training'), 
+'2025-07-21', 'present', 'Excellent motorcycle handling skills'),
+
+-- Ruwan Kumara (Motor Car Training)
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'ruwan.kumara@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Motor Car Training'), 
+'2025-07-21', 'absent', 'Family emergency'),
+
+-- Tharindu Wickramasinghe (Light Motorcycle Training)
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'tharindu.wickramasinghe@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'pradeep.fernando@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Light Motorcycle Training'), 
+'2025-07-21', 'present', 'Quick learner, good progress'),
+
+-- Shani Mendis (Dual-purpose Vehicle Training)
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'shani.mendis@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'kamala.wijesinghe@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Dual-purpose Vehicle Training'), 
+'2025-07-21', 'present', 'Need more practice on parking'),
+
+-- Chamara Silva (Heavy Car Training)
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'chamara.silva@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'nilanthi.perera@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Heavy Car Training'), 
+'2025-07-21', 'present', 'Advanced driving techniques practiced'),
+
+-- Day 2: 2025-07-22
+-- Kasun Madhusanka
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'kasun.madhusanka@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Motor Car Training'), 
+'2025-07-22', 'present', 'Improved steering control'),
+
+-- Dilani Jayawardene
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'dilani.jayawardene@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'kamala.wijesinghe@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Motorcycle Training'), 
+'2025-07-22', 'present', 'Mastered gear shifting'),
+
+-- Ruwan Kumara
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'ruwan.kumara@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Motor Car Training'), 
+'2025-07-22', 'present', 'Made up for missed lesson'),
+
+-- Tharindu Wickramasinghe
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'tharindu.wickramasinghe@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'pradeep.fernando@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Light Motorcycle Training'), 
+'2025-07-22', 'present', 'Highway driving practice'),
+
+-- Shani Mendis
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'shani.mendis@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'kamala.wijesinghe@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Dual-purpose Vehicle Training'), 
+'2025-07-22', 'absent', 'Medical appointment'),
+
+-- Chamara Silva
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'chamara.silva@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'nilanthi.perera@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Heavy Car Training'), 
+'2025-07-22', 'present', 'Heavy vehicle maneuvering'),
+
+-- Day 3: 2025-07-23
+-- Kasun Madhusanka
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'kasun.madhusanka@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Motor Car Training'), 
+'2025-07-23', 'present', 'Parallel parking practice'),
+
+-- Dilani Jayawardene
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'dilani.jayawardene@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'kamala.wijesinghe@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Motorcycle Training'), 
+'2025-07-23', 'present', 'Traffic rules theory test passed'),
+
+-- Ruwan Kumara
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'ruwan.kumara@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Motor Car Training'), 
+'2025-07-23', 'present', 'Confidence building exercises'),
+
+-- Tharindu Wickramasinghe
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'tharindu.wickramasinghe@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'pradeep.fernando@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Light Motorcycle Training'), 
+'2025-07-23', 'present', 'Night driving practice'),
+
+-- Shani Mendis
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'shani.mendis@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'kamala.wijesinghe@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Dual-purpose Vehicle Training'), 
+'2025-07-23', 'present', 'Clutch control improvement'),
+
+-- Chamara Silva
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'chamara.silva@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'nilanthi.perera@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Heavy Car Training'), 
+'2025-07-23', 'present', 'Commercial vehicle regulations'),
+
+-- Week 2: 2025-07-28 to 2025-08-03
+-- Nimesha Rathnayake (Light Tricycle/Van Training)
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'nimesha.rathnayake@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Light Tricycle/Van Training'), 
+'2025-07-28', 'present', 'Three-wheeler basics covered'),
+
+-- Lahiru Gamage (Passenger Vehicle Training)
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'lahiru.gamage@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'sampath.gunawardena@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Passenger Vehicle Training (≤ 32)'), 
+'2025-07-28', 'present', 'Passenger safety protocols'),
+
+-- Malika Fernando (Light Motorcycle Training)
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'malika.fernando@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'pradeep.fernando@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Light Motorcycle Training'), 
+'2025-07-28', 'present', 'Beginner motorcycle lessons'),
+
+-- Ishara Perera (Light Lorry Training)
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'ishara.perera@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'kamala.wijesinghe@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Light Lorry Training'), 
+'2025-07-28', 'present', 'Light lorry loading techniques'),
+
+-- Sahan Dissanayake (Mini Bus Training)
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'sahan.dissanayake@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'nilanthi.perera@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Mini Bus Training (≤ 16)'), 
+'2025-07-28', 'present', 'Mini bus driving fundamentals'),
+
+-- Gayani Wickremasinghe (Ambulance/Hearse Training)
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'gayani.wickremasinghe@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Ambulance/Hearse Training'), 
+'2025-07-28', 'present', 'Emergency vehicle procedures'),
+
+-- Day 2: 2025-07-29
+-- Nimesha Rathnayake
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'nimesha.rathnayake@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Light Tricycle/Van Training'), 
+'2025-07-29', 'present', 'Van driving on main roads'),
+
+-- Lahiru Gamage
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'lahiru.gamage@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'sampath.gunawardena@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Passenger Vehicle Training (≤ 32)'), 
+'2025-07-29', 'absent', 'Personal work commitment'),
+
+-- Malika Fernando
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'malika.fernando@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'pradeep.fernando@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Light Motorcycle Training'), 
+'2025-07-29', 'present', 'Motorcycle balance exercises'),
+
+-- Ishara Perera
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'ishara.perera@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'kamala.wijesinghe@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Light Lorry Training'), 
+'2025-07-29', 'present', 'Commercial driving ethics'),
+
+-- Sahan Dissanayake
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'sahan.dissanayake@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'nilanthi.perera@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Mini Bus Training (≤ 16)'), 
+'2025-07-29', 'present', 'Passenger vehicle inspection'),
+
+-- Gayani Wickremasinghe
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'gayani.wickremasinghe@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Ambulance/Hearse Training'), 
+'2025-07-29', 'present', 'Medical emergency response'),
+
+-- Day 3: 2025-07-30
+-- Nimesha Rathnayake
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'nimesha.rathnayake@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Light Tricycle/Van Training'), 
+'2025-07-30', 'present', 'City traffic navigation'),
+
+-- Lahiru Gamage
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'lahiru.gamage@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'sampath.gunawardena@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Passenger Vehicle Training (≤ 32)'), 
+'2025-07-30', 'present', 'Route planning strategies'),
+
+-- Day 4: 2025-08-01
+-- Kasun Madhusanka
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'kasun.madhusanka@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Motor Car Training'), 
+'2025-08-01', 'present', 'Advanced parking techniques'),
+
+-- Day 6: 2025-08-03 (today)
+-- Gayani Wickremasinghe
+((SELECT s.student_id FROM students s INNER JOIN users u ON s.user_id = u.user_id WHERE u.email = 'gayani.wickremasinghe@gmail.com'), 
+(SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'mahinda.rajapaksha@safepath.lk')), 
+(SELECT course_id FROM courses WHERE course_name = 'Ambulance/Hearse Training'), 
+'2025-08-03', 'present', 'Emergency response certification');
+
+
+
+
+
+
+
+
+
+-- User Account Creation 
 -- Insert Admin user
 INSERT INTO users (name, email, password, role, phone, address, created_at) VALUES
 ('Admin User', 'admin@spo.com', '$2y$10$ar9lCf6n.jYzV8vvZrkSCO1SSgnDrtq4hr2gOv30Ql7AeUzy1ZPc2', 'admin', '+94770000001', 'Admin Address', NOW());
 -- email:admin@spo.com, password:admin123
-
 
 -- Insert Instructor user
 INSERT INTO users (name, email, password, role, phone, address, created_at) VALUES
@@ -749,24 +805,19 @@ INSERT INTO instructors (user_id, birth_date, gender, national_id_number, experi
 );
 -- email:instructor@spo.com, password:instructor123
 
-
-
 -- Insert Student user
 INSERT INTO users (name, email, password, role, phone, address, created_at) VALUES
 ('Student Clara', 'student@spo.com', '$2y$10$dcfb.vZYdyXYy.NEOKjvg.gUOl6TxzT/xYetf7TDNZvyGabtXSlIW', 'student', '+94770000003', 'Student Address', NOW());
 
--- Link Student details
 INSERT INTO students (user_id, instructor_id, course_id, birth_date, gender, national_id_number, start_date, enrollment_status) VALUES
 (
   (SELECT user_id FROM users WHERE email = 'student@spo.com'),
   (SELECT instructor_id FROM instructors WHERE user_id = (SELECT user_id FROM users WHERE email = 'instructor@spo.com')),
-  1, -- Replace with actual course_id or NULL
+  NULL, -- Set to NULL instead of 1
   '2000-07-20',
   'female',
   '900123456V',
   CURDATE(),
   'active'
 );
-
 -- email:student@spo.com, password:student123
-

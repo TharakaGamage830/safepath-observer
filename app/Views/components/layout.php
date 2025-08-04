@@ -43,8 +43,26 @@ try {
 
   <style>
     body {
-      background-color: #f8f9fa;
-      overflow-x: hidden;
+  background-color: #f8f9fa;
+  overflow: hidden; /* Prevent body scroll */
+  margin: 0;
+  padding: 0;
+  height: 100vh; /* Full viewport height */
+    }
+
+    /* App container to hold everything */
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* Content wrapper below navbar */
+    .content-wrapper {
+      display: flex;
+      flex: 1;
+      margin-top: 60px; /* Account for fixed navbar */
+      height: calc(100vh - 60px);
     }
 
     .sidebar {
@@ -57,27 +75,23 @@ try {
       border-right: 1px solid #dee2e6;
       z-index: 1030;
       transition: left 0.3s ease;
+      overflow-y: auto; /* Allow sidebar to scroll if needed */
     }
 
     .sidebar.show {
       left: 0;
     }
 
+    /* MAIN FIX: Change from absolute to relative positioning */
     .main-content {
-      margin-left: 250px;
       margin-top: 60px;
-      min-height: calc(100vh - 60px);
+      margin-left: 250px; /* Space for sidebar */
+      width: calc(100% - 250px);
+      height: calc(100vh - 60px); /* Full height minus navbar */
+      overflow-y: auto; /* Enable scrolling for content only */
       padding: 20px;
-      overflow-y: auto;
-    }
-
-    .navbar {
-      height: 60px;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 1040;
+      background-color: #f8f9fa;
+      box-sizing: border-box;
     }
 
     .overlay {
@@ -95,12 +109,19 @@ try {
       display: block;
     }
 
+    /* Mobile responsiveness */
     @media (max-width: 768px) {
       .sidebar {
         left: -250px;
       }
+      
       .main-content {
         margin-left: 0;
+        width: 100%;
+      }
+      
+      .sidebar.show ~ .main-content {
+        margin-left: 0; /* Keep main content full width on mobile */
       }
     }
   </style>
