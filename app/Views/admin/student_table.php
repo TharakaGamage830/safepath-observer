@@ -13,16 +13,24 @@ require_once __DIR__ . '/../../api/api.php';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
-            background-color: #E3E3EA;
+            background-color: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         .form-container {
             max-width: 800px;
             margin: 30px auto;
             padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.08);
             background-color: #A4B5CB;
+        }
+        .btn-close1{
+            background-color: #f06363ff;
+            width: 150px;
+            height: 50px;
+            border-radius: 20px;
+            border-color:#f06363ff ;
+            color: white;
         }
         .required:after {
             content: " *";
@@ -35,34 +43,18 @@ require_once __DIR__ . '/../../api/api.php';
             color: #dc3545;
             font-size: 0.875em;
         }
-        .status-not_started {
-            color: #6c757d;
-        }
-        .status-progress {
-            color: #ffc107;
-            font-weight: bold;
-        }
-        .status-completed {
-            color: #198754;
-            font-weight: bold;
-        }
-        .status-in_progress, .status-inprogress, .status-in-progress {
-            color: #ffc107;
-            font-weight: bold;
-        }
-        .card {
-            border: none;
-        }
         .search-container {
             padding: 30px;
             height: 180px;
-            background: #E3E3EA;
-            border-bottom: 1px solid #E3E3EA;
+          
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-radius: 15px 15px 0 0;
+            color: white;
         }
         .search-box {
+            border-color: #000000;
             width: 300px;
             position: relative;
             flex-grow: 1;
@@ -71,6 +63,7 @@ require_once __DIR__ . '/../../api/api.php';
         .search-box input {
             padding-right: 40px;
             border-radius: 20px;
+            border-color: #000000;
         }
         .search-box i {
             position: absolute;
@@ -80,83 +73,167 @@ require_once __DIR__ . '/../../api/api.php';
         }
         .search-hint {
             font-size: 0.8rem;
-            color: #6c757d;
+            color: rgba(255,255,255,0.7);
             margin-top: 5px;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.08);
         }
         .card-header {
             background-color: #E3E3EA;
             text-align: center;
             color: black;
             border-bottom: none;
+            padding: 20px;
         }
         .card-body {
-            background-color: #D9D9D9;
-        }
-        .table-responsive {
-            overflow-x: auto;
-        }
-        .table {
-            table-layout: fixed;
-        }
-        .table th:nth-child(1),
-        .table td:nth-child(1) {
-            width: 15%;
-        }
-        .table th:nth-child(2),
-        .table td:nth-child(2) {
-            width: 20%;
-        }
-        .table th:nth-child(3),
-        .table td:nth-child(3) {
-            width: 20%;
-        }
-        .table th:nth-child(4),
-        .table td:nth-child(4) {
-            width: 15%;
-        }
-        .table th:nth-child(5),
-        .table td:nth-child(5) {
-            width: 15%;
-        }
-        .table th:nth-child(6),
-        .table td:nth-child(6) {
-            width: 15%;
+            background-color: white;
+            padding: 0;
         }
         
-        .btn-outline-primary {
-            border-color: #ABBCF0;
-            background-color: #ABBCF0;
-            color: black;
-        }
-        .btn-outline-primary:hover {
-            background-color: #CDCA2B;
-            color: black;
-        }
-        .alert {
-            margin-top: 20px;
-        }
-        #studentFormSection {
-            display: none;
-        }
-        .action-container {
-            position: relative;
+        /* Creative Table Styling */
+        .creative-table {
+            border-collapse: separate;
+            border-spacing: 0 10px;
             width: 100%;
         }
-        .action-buttons {
-            position: absolute;
-            right: 0;
+        
+        .creative-table thead th {
+            background-color: #002F6C;
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 15px 20px;
+            border: none;
+            position: sticky;
             top: 0;
-            display: none;
-            background: white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            border-radius: 5px;
-            padding: 5px;
             z-index: 10;
-            gap: 5px;
         }
+        
+        .creative-table thead th:first-child {
+            border-radius: 12px 0 0 12px;
+        }
+        
+        .creative-table thead th:last-child {
+            border-radius: 0 12px 12px 0;
+        }
+        
+        .creative-table tbody tr {
+            background-color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border-radius: 12px;
+        }
+        
+        .creative-table tbody tr:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        .creative-table tbody td {
+            padding: 15px 20px;
+            vertical-align: middle;
+            border: none;
+            border-top: 1px solid rgba(0, 0, 0, 0.03);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+        }
+        
+        .creative-table tbody td:first-child {
+            border-left: 1px solid rgba(0, 0, 0, 0.03);
+            border-radius: 12px 0 0 12px;
+        }
+        
+        .creative-table tbody td:last-child {
+            border-right: 1px solid rgba(0, 0, 0, 0.03);
+            border-radius: 0 12px 12px 0;
+        }
+        
+        /* Status Badges */
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+        
+        .status-not_started {
+            background-color: #f0f0f0;
+            color: #6c757d;
+        }
+        
+        .status-progress {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-completed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        /* Action Buttons */
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 3px;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .view-btn {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .edit-btn {
+            background-color: #fff8e1;
+            color: #ff8f00;
+        }
+        
+        .delete-btn {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .action-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Empty State */
+        .empty-state {
+            background-color: white;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            color: #e0e0e0;
+            margin-bottom: 15px;
+        }
+        
+        .empty-state p {
+            color: #9e9e9e;
+            font-size: 1.1rem;
+        }
+        
         .add-btn {
+            margin-bottom: 25px;
             white-space: nowrap;
-            color:#ffffff;
+            color: #ffffff;
             background-color: #002F6C;
             border: 1px solid #002F6C;
             border-radius: 20px;
@@ -164,17 +241,23 @@ require_once __DIR__ . '/../../api/api.php';
             font-weight: bold;
             transition: all 0.3s ease;
         }
+        
         .add-btn:hover {
-            background-color: #4e6fa1ff;
+            background-color: #A4B5CB;
             color: #000000;
         }
         
         /* Form input styling */
         .form-control, .form-select, textarea.form-control {
-            border-radius: 15px !important; /* Added border radius */
+            border-radius: 10px !important;
             padding: 10px 15px;
-            border: 1px solid #ced4da;
+            border: 1px solid #e0e0e0;
             transition: all 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus, textarea.form-control:focus {
+            border-color: #002F6C;
+            box-shadow: 0 0 0 0.25rem rgba(0, 47, 108, 0.15);
         }
         
         /* Form button styling */
@@ -183,27 +266,94 @@ require_once __DIR__ . '/../../api/api.php';
             justify-content: space-between;
             margin-top: 30px;
         }
+        .modal-header{
+            background-color: #002F6C;
+        }
         .submit-btn {
             background-color: #002F6C;
-            border-radius: 15px;
+            border-radius: 10px;
             padding: 10px 25px;
             color: white;
             border: none;
             font-weight: bold;
+            transition: all 0.3s ease;
         }
+        
         .submit-btn:hover {
             background-color: #004494;
+            transform: translateY(-2px);
         }
+        
         .cancel-btn {
             background-color: #CDCA2B;
-            border-radius: 15px;
+            border-radius: 10px;
             padding: 10px 25px;
             color: black;
             border: none;
             font-weight: bold;
+            transition: all 0.3s ease;
         }
+        
         .cancel-btn:hover {
             background-color: #e5e223;
+            transform: translateY(-2px);
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .creative-table thead {
+                display: none;
+            }
+            
+            .creative-table tbody tr {
+                display: block;
+                margin-bottom: 20px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+            
+            .creative-table tbody td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px 15px;
+                border-radius: 0 !important;
+            }
+            
+            .creative-table tbody td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #002F6C;
+                margin-right: 15px;
+                flex: 0 0 120px;
+            }
+            
+            .creative-table tbody td:first-child {
+                border-radius: 12px 12px 0 0 !important;
+            }
+            
+            .creative-table tbody td:last-child {
+                border-radius: 0 0 12px 12px !important;
+            }
+            
+            .action-container {
+                justify-content: flex-end;
+            }
+            
+            .search-container {
+                flex-direction: column;
+                height: auto;
+                padding: 20px;
+            }
+            
+            .search-box {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+            
+            .add-btn {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -221,28 +371,29 @@ require_once __DIR__ . '/../../api/api.php';
             <div class="card-header">
                 <h2 class="mb-0">Students Details</h2>
             </div>
-            
+         
             <!-- Search and Add Student Container -->
             <div class="search-container">
                 <!-- Search Box -->
                 <form method="get" class="search-box">
                     <div class="input-group">
                         <input type="text" class="form-control" name="search" placeholder="Search by ID, Name or Status..." 
-                               value="<?= htmlspecialchars($searchTerm) ?>">
+                               value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
                         <i class="fas fa-search"></i>
                     </div>
+                    <div class="search-hint">Search by student ID, name, or status</div>
                 </form>
                 
                 <!-- Add Student Button -->
-                <button class="btn btn-light add-btn" onclick="showForm()">
+                <button class="btn add-btn" onclick="showForm()">
                     <i class="fas fa-plus me-2"></i>Add Student
                 </button>
             </div>
             
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-light">
+                    <table class="creative-table">
+                        <thead>
                             <tr>
                                 <th>Student ID</th>
                                 <th>Name</th>
@@ -255,7 +406,12 @@ require_once __DIR__ . '/../../api/api.php';
                         <tbody>
                             <?php if ($students->num_rows === 0): ?>
                                 <tr>
-                                    <td colspan="6" class="text-center">No students found</td>
+                                    <td colspan="6">
+                                        <div class="empty-state">
+                                            <i class="fas fa-user-graduate"></i>
+                                            <p>No students found</p>
+                                        </div>
+                                    </td>
                                 </tr>
                             <?php else: ?>
                                 <?php while ($student = $students->fetch_assoc()): 
@@ -275,36 +431,30 @@ require_once __DIR__ . '/../../api/api.php';
                                     $display_status = ucwords(str_replace('_', ' ', $status));
                                 ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($student['student_id']) ?></td>
-                                    <td><?= htmlspecialchars($student['name']) ?></td>
-                                    <td><?= htmlspecialchars($student['course_name']) ?></td>
-                                    <td><?= htmlspecialchars($student['phone_number']) ?></td>
-                                    <td class="status-<?= htmlspecialchars($status) ?>">
-                                        <?= htmlspecialchars($display_status) ?>
+                                    <td data-label="Student ID"><?= htmlspecialchars($student['student_id']) ?></td>
+                                    <td data-label="Name"><?= htmlspecialchars($student['name']) ?></td>
+                                    <td data-label="Course"><?= htmlspecialchars($student['course_name']) ?></td>
+                                    <td data-label="Phone"><?= htmlspecialchars($student['phone_number']) ?></td>
+                                    <td data-label="Status">
+                                        <span class="status-badge status-<?= htmlspecialchars($status) ?>">
+                                            <?= htmlspecialchars($display_status) ?>
+                                        </span>
                                     </td>
-                                    <td>
-                                        <div class="action-container">
-                                            <button class="btn btn-sm btn-outline-primary" onclick="toggleActions(<?= $student['id'] ?>)">
-                                                Action
+                                    <td data-label="Actions">
+                                        <div class="d-flex action-container">
+                                            <button class="action-btn view-btn" onclick="viewStudent(<?= $student['id'] ?>)">
+                                                <i class="fas fa-eye"></i>
                                             </button>
-                                            
-                                            <div class="action-buttons" id="actions-<?= $student['id'] ?>">
-                                                <button class="btn btn-sm btn-outline-info" onclick="viewStudent(<?= $student['id'] ?>)">
-                                                    <i class="fas fa-eye"></i>
+                                            <button class="action-btn edit-btn" onclick="editStudent(<?= $student['id'] ?>)">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <form method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this student?')">
+                                                <input type="hidden" name="action" value="delete_student">
+                                                <input type="hidden" name="id" value="<?= $student['id'] ?>">
+                                                <button type="submit" class="action-btn delete-btn">
+                                                    <i class="fas fa-trash"></i>
                                                 </button>
-                                                
-                                                <button class="btn btn-sm btn-outline-warning" onclick="editStudent(<?= $student['id'] ?>)">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                
-                                                <form method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this student?')">
-                                                    <input type="hidden" name="action" value="delete_student">
-                                                    <input type="hidden" name="id" value="<?= $student['id'] ?>">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
+                                            </form>
                                         </div>
                                     </td>
                                 </tr>
@@ -420,7 +570,7 @@ require_once __DIR__ . '/../../api/api.php';
         <div class="modal fade" id="viewStudentModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
+                    <div class="modal-header  text-white">
                         <h5 class="modal-title">Student Details</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -428,7 +578,7 @@ require_once __DIR__ . '/../../api/api.php';
                         <!-- Student details will be loaded here -->
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn-close1" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
@@ -439,20 +589,6 @@ require_once __DIR__ . '/../../api/api.php';
     <script>
         // Initialize modals
         const viewStudentModal = new bootstrap.Modal(document.getElementById('viewStudentModal'));
-        
-        // Toggle action buttons visibility
-        function toggleActions(studentId) {
-            // Hide all other action buttons first
-            document.querySelectorAll('.action-buttons').forEach(el => {
-                if (el.id !== `actions-${studentId}`) {
-                    el.style.display = 'none';
-                }
-            });
-            
-            // Toggle the clicked action buttons
-            const actionButtons = document.getElementById(`actions-${studentId}`);
-            actionButtons.style.display = actionButtons.style.display === 'none' ? 'flex' : 'none';
-        }
         
         // View student details
         function viewStudent(id) {
@@ -497,7 +633,7 @@ require_once __DIR__ . '/../../api/api.php';
                                 <p><strong>Course:</strong> ${student.course_name}</p>
                             </div>
                             <div class="col-md-6">
-                                <p><strong>Status:</strong> <span class="status-${status}">${display_status}</span></p>
+                                <p><strong>Status:</strong> <span class="status-badge status-${status}">${display_status}</span></p>
                             </div>
                         </div>
                     `;
@@ -514,7 +650,7 @@ require_once __DIR__ . '/../../api/api.php';
             fetch('<?= $_SERVER['PHP_SELF'] ?>?get_student=' + id)
                 .then(response => response.json())
                 .then(student => {
-                    document.getElementById('formTitle').textContent = 'Edit Student';
+                    document.getElementById('formTitle').textContent = 'Update Student Details';
                     document.getElementById('formAction').value = 'update_student';
                     document.getElementById('studentId').value = student.id;
                     document.getElementById('name').value = student.name;
@@ -575,6 +711,7 @@ require_once __DIR__ . '/../../api/api.php';
             document.getElementById('studentForm').reset();
             document.getElementById('statusDisplay').value = 'not_started';
             document.getElementById('status').value = 'not_started';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         
         function showTable() {
