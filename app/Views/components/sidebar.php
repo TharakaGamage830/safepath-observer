@@ -32,7 +32,7 @@ $menu_items = [];
 if ($user['role'] === 'admin') {
     $menu_items = [
         ['id' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'bi-speedometer2', 'url' => 'admin-dashboard.php', 'active' => ($current_page === 'admin-dashboard')],
-        ['id' => 'students', 'label' => 'Students', 'icon' => 'bi-people', 'url' => 'students-details-form.php', 'active' => ($current_page === 'students-details-form')],
+        ['id' => 'students', 'label' => 'Students', 'icon' => 'bi-people', 'url' => 'student_table.php', 'active' => ($current_page === 'student_table')],
         ['id' => 'instructor', 'label' => 'Instructors', 'icon' => 'bi-person-badge', 'url' => 'instructor-detail-form.php', 'active' => ($current_page === 'instructor-detail-form')],
         ['id' => 'courses', 'label' => 'Courses', 'icon' => 'bi-book', 'url' => 'course-detail-form.php', 'active' => ($current_page === 'course-detail-form')],
     ];
