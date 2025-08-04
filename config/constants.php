@@ -12,4 +12,11 @@ define('URL_ROOT', 'http://localhost/SafePathObserver/public');
 
 // Session Constants
 define('SESSION_TIMEOUT', 1800); // 30 minutes
-?>
+
+
+try {
+    $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASS);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Database connection failed: " . $e->getMessage());
+}

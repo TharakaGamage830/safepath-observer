@@ -3,12 +3,10 @@ session_start();
 
 // For testing purposes, set a default user
 // In production, this should come from your authentication system
-if (!isset($_SESSION['user'])) {
-    $_SESSION['user'] = [
-        'id' => 1,
-        'name' => 'Admin User',
-        'role' => 'admin' // Change to 'student' or 'instructor' for testing
-    ];
+if (!isset($_SESSION['user']) || !isset($_SESSION['user']['role'])) {
+    // User not logged in, redirect to login page
+    header('Location: ../login/index.php');
+    exit();
 }
 
 $user = $_SESSION['user'];
