@@ -52,17 +52,15 @@ require_once __DIR__ . '/../../api/api.php';
         }
         .card {
             border: none;
-         
         }
         .search-container {
-            padding: 30px 30px 30px 30px ;
+            padding: 30px;
             height: 180px;
             background: #E3E3EA;
             border-bottom: 1px solid #E3E3EA;
             display: flex;
             justify-content: space-between;
             align-items: center;
-          
         }
         .search-box {
             width: 300px;
@@ -91,8 +89,7 @@ require_once __DIR__ . '/../../api/api.php';
             color: black;
             border-bottom: none;
         }
-        .card-body{
-        
+        .card-body {
             background-color: #D9D9D9;
         }
         .table-responsive {
@@ -129,7 +126,6 @@ require_once __DIR__ . '/../../api/api.php';
         .btn-outline-primary {
             border-color: #ABBCF0;
             background-color: #ABBCF0;
-       
             color: black;
         }
         .btn-outline-primary:hover {
@@ -172,17 +168,42 @@ require_once __DIR__ . '/../../api/api.php';
             background-color: #4e6fa1ff;
             color: #000000;
         }
-        .submit-btn{
-            background-color: #002F6C;
-            border-radius: 20px;
-            padding: 10px;
-            color: white;
+        
+        /* Form input styling */
+        .form-control, .form-select, textarea.form-control {
+            border-radius: 15px !important; /* Added border radius */
+            padding: 10px 15px;
+            border: 1px solid #ced4da;
+            transition: all 0.3s ease;
         }
-        .cancle-btn{
+        
+        /* Form button styling */
+        .form-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        .submit-btn {
+            background-color: #002F6C;
+            border-radius: 15px;
+            padding: 10px 25px;
+            color: white;
+            border: none;
+            font-weight: bold;
+        }
+        .submit-btn:hover {
+            background-color: #004494;
+        }
+        .cancel-btn {
             background-color: #CDCA2B;
-            border-radius: 20px;
-            padding: 10px;
+            border-radius: 15px;
+            padding: 10px 25px;
             color: black;
+            border: none;
+            font-weight: bold;
+        }
+        .cancel-btn:hover {
+            background-color: #e5e223;
         }
     </style>
 </head>
@@ -198,7 +219,7 @@ require_once __DIR__ . '/../../api/api.php';
         <!-- Student Table -->
         <div class="card" id="studentTableSection">
             <div class="card-header">
-                <h4 class="mb-0"><i class="fas fa-users me-2"></i>Students  Details</h4>
+                <h2 class="mb-0">Students Details</h2>
             </div>
             
             <!-- Search and Add Student Container -->
@@ -210,7 +231,6 @@ require_once __DIR__ . '/../../api/api.php';
                                value="<?= htmlspecialchars($searchTerm) ?>">
                         <i class="fas fa-search"></i>
                     </div>
-                    
                 </form>
                 
                 <!-- Add Student Button -->
@@ -223,7 +243,7 @@ require_once __DIR__ . '/../../api/api.php';
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead class="table-light">
-                            <tr >
+                            <tr>
                                 <th>Student ID</th>
                                 <th>Name</th>
                                 <th>Course</th>
@@ -383,11 +403,12 @@ require_once __DIR__ . '/../../api/api.php';
                         </div>
                     </div>
                     
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                        <button type="button" class="cancle-btn me-md-2" onclick="showTable()">
+                    <!-- Form footer with buttons -->
+                    <div class="form-footer">
+                        <button type="button" class="cancel-btn" onclick="showTable()">
                             <i class="fas fa-times me-2"></i>Cancel
                         </button>
-                        <button type="submit" class="submit-btn me-md-2" id="submitBtn">
+                        <button type="submit" class="submit-btn" id="submitBtn">
                             <i class="fas fa-save me-2"></i>Submit
                         </button>
                     </div>
