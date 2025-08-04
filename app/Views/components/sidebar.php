@@ -35,6 +35,7 @@ if ($user['role'] === 'admin') {
         ['id' => 'students', 'label' => 'Students', 'icon' => 'bi-people', 'url' => 'student_table.php', 'active' => ($current_page === 'student_table')],
         ['id' => 'instructor', 'label' => 'Instructors', 'icon' => 'bi-person-badge', 'url' => 'instructor-detail-form.php', 'active' => ($current_page === 'instructor-detail-form')],
         ['id' => 'courses', 'label' => 'Courses', 'icon' => 'bi-book', 'url' => 'course-detail-form.php', 'active' => ($current_page === 'course-detail-form')],
+        ['id' => 'aboutus', 'label' => 'About-us', 'icon' => 'bi-wheel', 'url' => 'aboutus.php', 'active' => ($current_page === 'aboutus')]
     ];
 } elseif ($user['role'] === 'instructor') {
     $menu_items = [
