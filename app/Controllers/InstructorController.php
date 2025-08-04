@@ -37,6 +37,12 @@ class InstructorController {
         include APPROOT . '/View/instructor/instructor-dashboard.php';
     }
 
+    public function getInstructorIdByUserID($userId) {
+    $stmt = $this->model->getInstructorIdByUserID($userId); // Assuming this method exists in your model
+    return $stmt; // Return the instructor ID
+    }  
+
+
 }
 
 

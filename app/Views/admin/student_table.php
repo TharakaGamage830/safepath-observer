@@ -500,8 +500,6 @@ ob_start();
 
                                     <td data-label="Phone"><?= htmlspecialchars($student['phone']) ?></td>
 
-                                    <td data-label="Phone"><?= htmlspecialchars($student['phone']) ?></td>
-
                                     <td data-label="Status">
                                         <span class="status-badge status-<?= htmlspecialchars($status) ?>">
                                             <?= htmlspecialchars($display_status) ?>
@@ -510,10 +508,7 @@ ob_start();
                                     <td data-label="Actions">
                                         <div class="d-flex action-container">
 
-                                            <button class="action-btn view-btn" onclick="viewStudent(<?= $student['student_id'] ?>)">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="action-btn edit-btn" onclick="editStudent(<?= $student['student_id'] ?>)">
+                                            
 
                                             <button class="action-btn view-btn" onclick="viewStudent('<?= $student['student_id'] ?>')">
                                                 <i class="fas fa-eye"></i>
