@@ -1,9 +1,5 @@
 <?php
-ob_start();
-require_once __DIR__ . '/../../../config/config.php';
-require_once __DIR__ . '/../../api/api.php';
-?>
-<?php
+require_once __DIR__ . '/../../config/config.php';
 // Get total number of students
 $totalStudentsQuery = "SELECT COUNT(*) as total FROM students";
 $totalStudentsResult = $conn->query($totalStudentsQuery);
@@ -16,9 +12,9 @@ $recentStudentsQuery = "SELECT s.*, c.name as course_name
                        WHERE s.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) 
                        ORDER BY s.created_at DESC LIMIT 5";
 $recentStudents = $conn->query($recentStudentsQuery);
-?>
 
-<?php
+
+
 $searchTerm = isset($_GET['search']) ? trim($_GET['search']) : '';
 $filteredStudents = [];
 
