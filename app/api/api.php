@@ -6,12 +6,15 @@ $totalStudentsResult = $conn->query($totalStudentsQuery);
 $totalStudents = $totalStudentsResult->fetch_assoc()['total'];
 
 // Get recent student registrations (last 7 days)
-$recentStudentsQuery = "SELECT s.*, c.name as course_name 
-                       FROM students s 
-                       LEFT JOIN courses c ON s.course_id = c.id
-                       WHERE s.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) 
+$recentStudentsQuery = "SELECT s.student_id, u.name, u.email, u.phone, u.address, 
+                       c.course_name, s.enrollment_status as status, s.created_at
+                       FROM students s
+                       JOIN users u ON s.user_id = u.user_id
+                       LEFT JOIN courses c ON s.course_id = c.course_id
+                       WHERE s.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
                        ORDER BY s.created_at DESC LIMIT 5";
 $recentStudents = $conn->query($recentStudentsQuery);
+
 
 
 // Get total number of students
