@@ -9,9 +9,9 @@ $db_name = 'safepath_observer';
 $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
 
 // // Check connection
-// if ($conn->connect_error) {
-//     die("Connection failed: " . $conn->connect_error);
-// }
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
 
 // Handle get student request
 ?>
